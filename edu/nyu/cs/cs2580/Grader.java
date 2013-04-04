@@ -20,7 +20,7 @@ package edu.nyu.cs.cs2580;
  *     using your search engine and examine the NumViews of the results
  *     returned. 10 points.
  *
- *  c) See writeup for grading on comparing PageRank and NumViews (15 points)
+ *  c) See write-up for grading on comparing PageRank and NumViews (15 points)
  *     and pseudo-relevance feedback (50 points).
  *
  * @author congyu
