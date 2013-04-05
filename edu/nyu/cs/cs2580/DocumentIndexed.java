@@ -30,19 +30,19 @@ public class DocumentIndexed extends Document {
 	public void setTotalWords(long totalWords) {
 		this.totalWords = totalWords;
 	}
-	
+
 	public void incrementWordFrequency(String word) {
-		if(wordFrequency.containsKey(word)) {
+		if (wordFrequency.containsKey(word)) {
 			int i = wordFrequency.get(word);
 			i++;
 			wordFrequency.put(word, i);
-		}else {
+		} else {
 			wordFrequency.put(word, 1);
 		}
 	}
-	
+
 	public int getWordFrequencyOf(String word) {
-		if(wordFrequency.containsKey(word))
+		if (wordFrequency.containsKey(word))
 			return wordFrequency.get(word);
 		else
 			return 0;

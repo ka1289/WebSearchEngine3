@@ -2,51 +2,48 @@ package edu.nyu.cs.cs2580;
 
 public class CompressionUtility {
 
-	// For Testing purpose
-	/*
-	 * public static void main(String args[]) { CompressionUtility cu = new
-	 * CompressionUtility(); System.out.println(cu.encodeByteAlign(0)); }
-	 */
-
 	public static String encodeByteAlign(int number) {
-		return binaryToHex(appendAdditionalZeroOrOne(appendZeros(convertToBinary(number))));
+		String _toBinary = Integer.toBinaryString(number);
+		String appendZero = appendZeros(_toBinary);
+		String additionZero = appendAdditionalZeroOrOne(appendZero);
+		return binaryToHex(additionZero);
 	}
 
 	public static String convertToBinary(int num) {
 		return Integer.toBinaryString(num);
 	}
 
-	public static String appendZeros(String binaryNum) {
-		int len = binaryNum.length();
-		if (len % 7 == 0) {
-			return binaryNum;
+	public static String appendZeros(String binaryNumber) {
+		int length = binaryNumber.length();
+		if (length % 7 == 0) {
+			return binaryNumber;
 		} else {
-			int remainingDiff = (len % 7);
+			int remainingDiff = (length % 7);
 			int diff = 7 - remainingDiff;
-			StringBuffer sb = new StringBuffer();
+			StringBuffer buffer = new StringBuffer();
 			for (int i = 0; i < diff; i++) {
-				sb.append(0);
+				buffer.append(0);
 			}
-			sb.append(binaryNum);
-			return sb.toString();
+			buffer.append(binaryNumber);
+			return buffer.toString();
 		}
 	}
 
 	public static String appendAdditionalZeroOrOne(String binaryNum) {
-		StringBuffer sb = new StringBuffer();
+		StringBuffer buffer = new StringBuffer();
 		int current = 0;
 		while (current < binaryNum.length()) {
 			if ((binaryNum.length() - current) > 7) {
-				sb.append(0);
+				buffer.append(0);
 			} else {
-				sb.append(1);
+				buffer.append(1);
 			}
 			for (int i = current; i < (current + 7); i++) {
-				sb.append(binaryNum.charAt(i));
+				buffer.append(binaryNum.charAt(i));
 			}
 			current += 7;
 		}
-		return sb.toString();
+		return buffer.toString();
 	}
 
 	public static String binaryToHex(String binaryNum) {
