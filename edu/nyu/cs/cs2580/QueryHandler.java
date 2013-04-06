@@ -37,16 +37,20 @@ class QueryHandler implements HttpHandler {
 			NONE, FULLSCAN, CONJUNCTIVE, FAVORITE, COSINE, PHRASE, QL, LINEAR, COMPREHENSIVE,
 		}
 
-		public RankerType _rankerType = RankerType.NONE;
-
+		public RankerType _rankerType = RankerType.NONE;		
+		
+		
 		// The output format.
 		public enum OutputFormat {
 			TEXT, HTML,
 		}
 
 		public OutputFormat _outputFormat = OutputFormat.TEXT;
+		private int _numdocs=10;
+		private int _numterms=10;
+		
 
-		public CgiArguments(String uriQuery) {
+		public CgiArguments(String uriQuery) {			
 			String[] params = uriQuery.split("&");
 			for (String param : params) {
 				String[] keyval = param.split("=", 2);
@@ -78,8 +82,25 @@ class QueryHandler implements HttpHandler {
 						// Ignored, search engine should never fail upon invalid
 						// user input.
 					}
+				} else if (key.equals("numdocs")) {
+					try {
+						System.out.println("in numdocs");
+						_numdocs = Integer.parseInt(val);
+						System.out.println("Last statement in numdocs");
+					} catch (NumberFormatException e) {
+						// Ignored, search engine should never fail upon invalid
+						// user input.
+					}
+				} else if (key.equals("numterms")) {
+					try {
+						_numterms = Integer.parseInt(val);
+					} catch (NumberFormatException e) {
+						// Ignored, search engine should never fail upon invalid
+						// user input.
+					}
 				}
-			} // End of iterating over params
+			}	
+				// End of iterating over params
 		}
 	}
 
@@ -129,7 +150,7 @@ class QueryHandler implements HttpHandler {
 		if (uriPath == null || uriQuery == null) {
 			respondWithMsg(exchange, "Something wrong with the URI!");
 		}
-		if (!uriPath.equals("/search")) {
+		if (!uriPath.equals("/search") && !(uriPath.equals("/prf"))) {
 			respondWithMsg(exchange, "Only /search is handled!");
 		}
 		System.out.println("Query: " + uriQuery);
@@ -151,7 +172,16 @@ class QueryHandler implements HttpHandler {
 		processedQuery.processQuery();
 
 		// Ranking.
-		Vector<ScoredDocument> scoredDocs = ranker.runQuery(processedQuery, cgiArgs._numResults);
+		System.out.println("Ranking");
+		Vector<ScoredDocument> scoredDocs = ranker.runQuery(processedQuery, cgiArgs._numResults);//Instead of _numResults
+		
+		//Providing Feedback
+		System.out.println("Hello");
+		if(scoredDocs == null) {
+			System.out.println("Null");
+		}
+		ComputeQueryRepresentation.compute(scoredDocs, processedQuery, _indexer);
+		
 		StringBuffer response = new StringBuffer();
 		switch (cgiArgs._outputFormat) {
 		case TEXT:
@@ -167,3 +197,4 @@ class QueryHandler implements HttpHandler {
 		System.out.println("Finished query: " + cgiArgs._query);
 	}
 }
+	

@@ -34,7 +34,10 @@ public class IndexerInvertedCompressed extends Indexer {
 	private Map<String, WordAttribute_WordOccurrences> wordMap = new HashMap<String, WordAttribute_WordOccurrences>();
 	private Map<Integer, DocumentIndexed> docMap = new HashMap<Integer, DocumentIndexed>();
 	private Map<String, WordAttribute_WordOccurrences> wordMapUncompressed = new HashMap<String, WordAttribute_WordOccurrences>();
+<<<<<<< HEAD
 	private Map<String, Integer> numViewsMap;
+=======
+>>>>>>> 628dbc537f63c2bb045cb510fdf178616a026893
 
 	public IndexerInvertedCompressed(Options options) {
 		super(options);
@@ -127,16 +130,19 @@ public class IndexerInvertedCompressed extends Indexer {
 		File[] indexedFiles = indexDir.listFiles();
 		indexedFiles = indexDir.listFiles();
 		for (File file : indexedFiles) {
-			if (file.getName().equals(".DS_Store") || file.getName().equals("doc_map.csv"))
+			if (file.getName().equals(".DS_Store")
+			    || file.getName().equals("doc_map.csv"))
 				continue;
-			BufferedReader ois = new BufferedReader(new FileReader(file.getAbsoluteFile()));
+			BufferedReader ois = new BufferedReader(new FileReader(
+			    file.getAbsoluteFile()));
 			String o;
 			while (((o = ois.readLine()) != null)) {
 				String[] eachLine = o.split("\t");
 				String key = eachLine[0];
 				if (wordMap.containsKey(key)) {
 					WordAttribute_WordOccurrences wa1 = wordMap.get(key);
-					wa1.setFreq(Integer.parseInt(eachLine[eachLine.length - 1]) + wa1.getFreq());
+					wa1.setFreq(Integer.parseInt(eachLine[eachLine.length - 1])
+					    + wa1.getFreq());
 					HashMap<Integer, ArrayList<Integer>> currMap = wa1.getList();
 					int i = 1;
 					while (i < eachLine.length - 1) {
@@ -182,8 +188,15 @@ public class IndexerInvertedCompressed extends Indexer {
 			}
 
 			StringBuilder builder = new StringBuilder();
+<<<<<<< HEAD
 			builder.append(_options._indexPrefix).append("/").append("numDocs").append(".csv");
 			BufferedWriter buf = new BufferedWriter(new FileWriter(builder.toString(), true));
+=======
+			builder.append(_options._indexPrefix).append("/").append("numDocs")
+			    .append(".csv");
+			BufferedWriter buf = new BufferedWriter(new FileWriter(
+			    builder.toString(), true));
+>>>>>>> 628dbc537f63c2bb045cb510fdf178616a026893
 			buf.write(_numDocs + "");
 			buf.newLine();
 			buf.write(_totalTermFrequency + "");
@@ -191,11 +204,13 @@ public class IndexerInvertedCompressed extends Indexer {
 
 			String s = file.getName().split("_")[0];
 
-			BufferedWriter oos = new BufferedWriter(new FileWriter(_options._indexPrefix + "/" + s + ".csv", true));
+			BufferedWriter oos = new BufferedWriter(new FileWriter(
+			    _options._indexPrefix + "/" + s + ".csv", true));
 			for (String si : wordMap.keySet()) {
 				oos.write(si + "\t");
 				WordAttribute_WordOccurrences temp_attr = wordMap.get(si);
-				LinkedHashMap<Integer, ArrayList<Integer>> temp_map = temp_attr.getList();
+				LinkedHashMap<Integer, ArrayList<Integer>> temp_map = temp_attr
+				    .getList();
 				for (int docid : temp_map.keySet()) {
 					oos.write(CompressionUtility.encodeByteAlign(docid));
 
@@ -220,8 +235,10 @@ public class IndexerInvertedCompressed extends Indexer {
 	}
 
 	private void serialize() throws IOException {
-		StringBuilder builder = new StringBuilder(_options._indexPrefix).append("/").append("doc_map.csv");
-		BufferedWriter aoos = new BufferedWriter(new FileWriter(builder.toString(), true));
+		StringBuilder builder = new StringBuilder(_options._indexPrefix)
+		    .append("/").append("doc_map.csv");
+		BufferedWriter aoos = new BufferedWriter(new FileWriter(builder.toString(),
+		    true));
 		for (int doc : docMap.keySet()) {
 			aoos.write(doc + "\t");
 			DocumentIndexed docIndexed = docMap.get(doc);
@@ -234,14 +251,17 @@ public class IndexerInvertedCompressed extends Indexer {
 		docMap.clear();
 
 		for (int i = 0; i < 199; i++) {
-			StringBuilder file = new StringBuilder(_options._indexPrefix).append("/").append(i).append("_tmp.csv");
+			StringBuilder file = new StringBuilder(_options._indexPrefix).append("/")
+			    .append(i).append("_tmp.csv");
 
-			BufferedWriter oos = new BufferedWriter(new FileWriter(file.toString(), true));
+			BufferedWriter oos = new BufferedWriter(new FileWriter(file.toString(),
+			    true));
 			HashMap<String, WordAttribute_WordOccurrences> attr = mapOfMaps[i];
 			for (String s : attr.keySet()) {
 				oos.write(s + "\t");
 				WordAttribute_WordOccurrences temp_attr = attr.get(s);
-				LinkedHashMap<Integer, ArrayList<Integer>> temp_map = temp_attr.getList();
+				LinkedHashMap<Integer, ArrayList<Integer>> temp_map = temp_attr
+				    .getList();
 				for (int docid : temp_map.keySet()) {
 					ArrayList<Integer> temp_occr = temp_map.get(docid);
 
@@ -293,7 +313,8 @@ public class IndexerInvertedCompressed extends Indexer {
 		stopWords.add("http");
 		String newFile = Parser.parse(eachFile);
 		Analyzer analyzer = new EnglishAnalyzer(Version.LUCENE_30, stopWords);
-		List<String> words = tokenize(analyzer.tokenStream("", new StringReader(newFile)));
+		List<String> words = tokenize(analyzer.tokenStream("", new StringReader(
+		    newFile)));
 		int i = 0;
 		for (String word : words) {
 
@@ -311,7 +332,8 @@ public class IndexerInvertedCompressed extends Indexer {
 				}
 
 				WordAttribute_WordOccurrences currWordAttr = currMap.get(stemmed);
-				LinkedHashMap<Integer, ArrayList<Integer>> currMapMap = currWordAttr.getList();
+				LinkedHashMap<Integer, ArrayList<Integer>> currMapMap = currWordAttr
+				    .getList();
 
 				if (currMapMap.containsKey(index)) {
 					int delta = 0;
@@ -373,8 +395,14 @@ public class IndexerInvertedCompressed extends Indexer {
 				continue;
 			}
 
+<<<<<<< HEAD
 			if (noFilesLoaded < 20 && !file.getName().equals("doc_map.csv") && !file.getName().equals(".DS_Store")
 					&& !file.getName().equals("numDocs.csv")) {
+=======
+			if (noFilesLoaded < 20 && !file.getName().equals("doc_map.csv")
+			    && !file.getName().equals(".DS_Store")
+			    && !file.getName().equals("numDocs.csv")) {
+>>>>>>> 628dbc537f63c2bb045cb510fdf178616a026893
 				loadFile(file);
 				noFilesLoaded++;
 			}
@@ -382,7 +410,8 @@ public class IndexerInvertedCompressed extends Indexer {
 	}
 
 	private void loadNumDocs(File file) throws IOException {
-		BufferedReader ois = new BufferedReader(new FileReader(file.getAbsoluteFile()));
+		BufferedReader ois = new BufferedReader(new FileReader(
+		    file.getAbsoluteFile()));
 		String o;
 		int i = 0;
 		while (((o = ois.readLine()) != null)) {
@@ -402,7 +431,8 @@ public class IndexerInvertedCompressed extends Indexer {
 	 * @throws IOException
 	 */
 	private void loadFile(File file) throws IOException {
-		BufferedReader br = new BufferedReader(new FileReader(file.getAbsoluteFile()));
+		BufferedReader br = new BufferedReader(new FileReader(
+		    file.getAbsoluteFile()));
 		String line = "";
 		while (((line = br.readLine()) != null)) {
 			String[] eachLine = line.split("\t");
@@ -425,7 +455,8 @@ public class IndexerInvertedCompressed extends Indexer {
 				for (char c : temp_char)
 					tempVectorArray_char.add(c);
 
-				List<Integer> tempList = DecompressionUtility.decodeByteAlign(tempVectorArray_char);
+				List<Integer> tempList = DecompressionUtility
+				    .decodeByteAlign(tempVectorArray_char);
 				int did = tempList.get(0);
 
 				int frequencyInDoc = tempList.size();
@@ -449,7 +480,8 @@ public class IndexerInvertedCompressed extends Indexer {
 
 	private void loadDocMap(File file) throws NumberFormatException, IOException {
 		docMap = new HashMap<Integer, DocumentIndexed>();
-		BufferedReader ois = new BufferedReader(new FileReader(file.getAbsoluteFile()));
+		BufferedReader ois = new BufferedReader(new FileReader(
+		    file.getAbsoluteFile()));
 		String o;
 		while (((o = ois.readLine()) != null)) {
 			String[] eachLine = o.split("\t");
@@ -487,8 +519,10 @@ public class IndexerInvertedCompressed extends Indexer {
 	}
 
 	public DocumentIndexed nextDoc(Query query, int docid) {
+
 		QueryPhrase queryPhrase = new QueryPhrase(query._query);
 		queryPhrase.processQuery();
+		System.out.println("Inside nextDoc token size " + queryPhrase._tokens.size());
 		List<String> phrases = new ArrayList<String>();
 		StringBuilder tokens = new StringBuilder();
 		for (String strTemp : queryPhrase._tokens) {
@@ -523,23 +557,30 @@ public class IndexerInvertedCompressed extends Indexer {
 				tokens.append(" ");
 			}
 		}
+
 		DocumentIndexed documentToBeCheckedForPhrases = null;
+		System.out.println("Inside nextDoc1");
 		try {
 			if (tokens.length() == 0) {
+				System.out.println("Inside tokens.length");
 				return functionCall(phrases, docid);
 			}
-			documentToBeCheckedForPhrases = nextDocToken(new Query(tokens.toString()), docid);
+			System.out.println("Inside nextDoc2");
+			documentToBeCheckedForPhrases = nextDocToken(
+			    new Query(tokens.toString()), docid);
 			if (documentToBeCheckedForPhrases == null)
 				return null;
 			if (phrases.size() == 0) {
 				return documentToBeCheckedForPhrases;
 			} else {
 				while (documentToBeCheckedForPhrases != null) {
-					boolean value = checkIfPhrasesPresent(documentToBeCheckedForPhrases._docid, phrases);
+					boolean value = checkIfPhrasesPresent(
+					    documentToBeCheckedForPhrases._docid, phrases);
 					if (!value) {
 						docid = documentToBeCheckedForPhrases._docid;
 						try {
-							documentToBeCheckedForPhrases = nextDocToken(new Query(tokens.toString()), docid);
+							documentToBeCheckedForPhrases = nextDocToken(
+							    new Query(tokens.toString()), docid);
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
@@ -568,20 +609,33 @@ public class IndexerInvertedCompressed extends Indexer {
 		}
 		return null;
 	}
+<<<<<<< HEAD
 
 	private DocumentIndexed functionCall(List<String> phrases, int docid) throws IOException {
+=======
+>>>>>>> 628dbc537f63c2bb045cb510fdf178616a026893
 
+	private DocumentIndexed functionCall(List<String> phrases, int docid)
+	    throws IOException {
+		
 		StringBuilder query = new StringBuilder();
 		for (String s : phrases) {
 			String[] split = s.split(" ");
 			for (String b : split)
 				query.append(b).append(" ");
 		}
-
-		String smallestWord = findWordWithSmallestList(new Query(query.toString().trim()));
-		WordAttribute_WordOccurrences smallestListOccr = wordMapUncompressed.get(smallestWord);
-		LinkedHashMap<Integer, ArrayList<Integer>> list = smallestListOccr.getList();
-
+		System.out.println("Inside functionCall1");
+		String smallestWord = findWordWithSmallestList(new Query(query.toString()
+		    .trim()));
+		System.out.println(smallestWord);
+		WordAttribute_WordOccurrences smallestListOccr = wordMapUncompressed
+		    .get(smallestWord);
+		System.out.println("After smallestList");
+		if(smallestListOccr == null) { System.out.println("smallestList is null");			
+		}
+		LinkedHashMap<Integer, ArrayList<Integer>> list = smallestListOccr
+		    .getList();
+		System.out.println("Inside functionCall2");
 		if (docid == -1) {
 			Iterator<Integer> iter = list.keySet().iterator();
 			docid = iter.next();
@@ -591,7 +645,12 @@ public class IndexerInvertedCompressed extends Indexer {
 			int currentDocId = currMap.getKey();
 			if (currentDocId <= docid)
 				continue;
+<<<<<<< HEAD
 			boolean flag = isPresentInAll(currentDocId, smallestWord, new Query(query.toString().trim()));
+=======
+			boolean flag = isPresentInAll(currentDocId, smallestWord, new Query(query
+			    .toString().trim()));
+>>>>>>> 628dbc537f63c2bb045cb510fdf178616a026893
 			if (!flag)
 				continue;
 			boolean value = checkIfPhrasesPresent(currentDocId, phrases);
@@ -631,8 +690,15 @@ public class IndexerInvertedCompressed extends Indexer {
 				return false;
 		}
 
+<<<<<<< HEAD
 		WordAttribute_WordOccurrences currentWordAttribute_WordOccurrences = wordMapUncompressed.get(phrase[0]);
 		LinkedHashMap<Integer, ArrayList<Integer>> map = currentWordAttribute_WordOccurrences.getList();
+=======
+		WordAttribute_WordOccurrences currentWordAttribute_WordOccurrences = wordMapUncompressed
+		    .get(phrase[0]);
+		LinkedHashMap<Integer, ArrayList<Integer>> map = currentWordAttribute_WordOccurrences
+		    .getList();
+>>>>>>> 628dbc537f63c2bb045cb510fdf178616a026893
 		if (!map.containsKey(docid))
 			return false;
 		List<Integer> list = map.get(docid);
@@ -672,10 +738,12 @@ public class IndexerInvertedCompressed extends Indexer {
 		List<String> commands = new ArrayList<String>();
 		commands.add("/bin/bash");
 		commands.add("-c");
-		commands.add("grep $'^" + did + "\t' " + _options._indexPrefix + "/" + "doc_map.csv");
+		commands.add("grep $'^" + did + "\t' " + _options._indexPrefix + "/"
+		    + "doc_map.csv");
 		ProcessBuilder pb = new ProcessBuilder(commands);
 		Process p = pb.start();
-		BufferedReader ois = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		BufferedReader ois = new BufferedReader(new InputStreamReader(
+		    p.getInputStream()));
 
 		String o;
 		while (((o = ois.readLine()) != null)) {
@@ -684,9 +752,13 @@ public class IndexerInvertedCompressed extends Indexer {
 			DocumentIndexed wa = new DocumentIndexed(docid);
 			String title = eachLine[1];
 			String url = eachLine[2];
+<<<<<<< HEAD
 			int numViews = Integer.parseInt(eachLine[3]);
 			int pageRank = Integer.parseInt(eachLine[4]);
 			
+=======
+
+>>>>>>> 628dbc537f63c2bb045cb510fdf178616a026893
 			int totalWords = Integer.parseInt(eachLine[eachLine.length - 1]);
 
 			wa.setTitle(title);
@@ -722,13 +794,23 @@ public class IndexerInvertedCompressed extends Indexer {
 		// List<String> commands = new ArrayList<String>();
 		// commands.add("/bin/bash");
 		// commands.add("-c");
+<<<<<<< HEAD
 		// commands.add("grep $'^" + word + "\t' " + _options._indexPrefix + "/"
 		// + firstLetter + ".csv");
+=======
+		// commands.add("grep $'^" + word + "\t' " + _options._indexPrefix + "/" +
+		// firstLetter + ".csv");
+>>>>>>> 628dbc537f63c2bb045cb510fdf178616a026893
 		// ProcessBuilder pb = new ProcessBuilder(commands);
 		// Process p = pb.start();
 		// BufferedReader ois = new BufferedReader(new
 		// InputStreamReader(p.getInputStream()));
+<<<<<<< HEAD
 		Scanner scanner = new Scanner(new FileReader(_options._indexPrefix + "/" + firstLetter + ".csv"));
+=======
+		Scanner scanner = new Scanner(new FileReader(_options._indexPrefix + "/"
+		    + firstLetter + ".csv"));
+>>>>>>> 628dbc537f63c2bb045cb510fdf178616a026893
 		String line = "";
 		while (scanner.hasNextLine()) {
 			line = scanner.nextLine();
@@ -755,7 +837,8 @@ public class IndexerInvertedCompressed extends Indexer {
 				for (char c : temp_char)
 					tempVectorArray_char.add(c);
 
-				List<Integer> tempList = DecompressionUtility.decodeByteAlign(tempVectorArray_char);
+				List<Integer> tempList = DecompressionUtility
+				    .decodeByteAlign(tempVectorArray_char);
 				int did = tempList.get(0);
 
 				int frequencyInDoc = tempList.size();
@@ -793,10 +876,12 @@ public class IndexerInvertedCompressed extends Indexer {
 		List<String> commands = new ArrayList<String>();
 		commands.add("/bin/bash");
 		commands.add("-c");
-		commands.add("grep $'^" + word + "\t' " + _options._indexPrefix + "/" + firstLetter + ".csv");
+		commands.add("grep $'^" + word + "\t' " + _options._indexPrefix + "/"
+		    + firstLetter + ".csv");
 		ProcessBuilder pb = new ProcessBuilder(commands);
 		Process p = pb.start();
-		BufferedReader ois = new BufferedReader(new InputStreamReader(p.getInputStream()));
+		BufferedReader ois = new BufferedReader(new InputStreamReader(
+		    p.getInputStream()));
 
 		String o;
 		if (((o = ois.readLine()) != null)) {
@@ -817,7 +902,8 @@ public class IndexerInvertedCompressed extends Indexer {
 				for (char c : temp_char)
 					tempVectorArray_char.add(c);
 
-				List<Integer> tempList = DecompressionUtility.decodeByteAlign(tempVectorArray_char);
+				List<Integer> tempList = DecompressionUtility
+				    .decodeByteAlign(tempVectorArray_char);
 				int did = tempList.get(0);
 
 				int frequencyInDoc = tempList.size();
@@ -844,8 +930,15 @@ public class IndexerInvertedCompressed extends Indexer {
 	}
 
 	private boolean isPresentAtPosition(int position, int docid, String string) {
+<<<<<<< HEAD
 		WordAttribute_WordOccurrences currentWordAttribute_WordOccurrences = wordMapUncompressed.get(string);
 		LinkedHashMap<Integer, ArrayList<Integer>> map = currentWordAttribute_WordOccurrences.getList();
+=======
+		WordAttribute_WordOccurrences currentWordAttribute_WordOccurrences = wordMapUncompressed
+		    .get(string);
+		LinkedHashMap<Integer, ArrayList<Integer>> map = currentWordAttribute_WordOccurrences
+		    .getList();
+>>>>>>> 628dbc537f63c2bb045cb510fdf178616a026893
 
 		if (!map.containsKey(docid))
 			return false;
@@ -853,14 +946,18 @@ public class IndexerInvertedCompressed extends Indexer {
 		return list.contains(position);
 	}
 
-	private DocumentIndexed nextDocToken(Query query, int docid) throws IOException {
+	private DocumentIndexed nextDocToken(Query query, int docid)
+	    throws IOException {
 		query.processQuery();
+		
 		// First find out the smallest list among the list of all the words
 		String smallestListWord = findWordWithSmallestList(query);
 		// System.out.println("smallestListword "+smallestListWord);
 		// Now take a next docId form the list of the smallestListWord
-		WordAttribute_WordOccurrences smallestWordAttribute_WordOccurrences = wordMapUncompressed.get(smallestListWord);
-		LinkedHashMap<Integer, ArrayList<Integer>> smallestMap = smallestWordAttribute_WordOccurrences.getList();
+		WordAttribute_WordOccurrences smallestWordAttribute_WordOccurrences = wordMapUncompressed
+		    .get(smallestListWord);
+		LinkedHashMap<Integer, ArrayList<Integer>> smallestMap = smallestWordAttribute_WordOccurrences
+		    .getList();
 		// if docid is -1 then make docid=0
 		if (docid == -1) {
 			Iterator<Integer> iterator = smallestMap.keySet().iterator();
@@ -870,7 +967,12 @@ public class IndexerInvertedCompressed extends Indexer {
 		// From the next docid we will have to call isPresentInAll for the query
 		// SImilar to the function written in IndexerInvertedDoconly.java
 
+<<<<<<< HEAD
 		for (Map.Entry<Integer, ArrayList<Integer>> currentMap : smallestMap.entrySet()) {
+=======
+		for (Map.Entry<Integer, ArrayList<Integer>> currentMap : smallestMap
+		    .entrySet()) {
+>>>>>>> 628dbc537f63c2bb045cb510fdf178616a026893
 			// System.out.println("checking for loop nextDocToken");
 			int currentDocId = currentMap.getKey();
 			if (currentDocId <= docid) {
@@ -940,32 +1042,42 @@ public class IndexerInvertedCompressed extends Indexer {
 		// Now since we have a map we can easily verify if the word is present
 		// in
 		// a document
-		WordAttribute_WordOccurrences currentWordAttribute_WordOccurrences = wordMapUncompressed.get(str);
-		LinkedHashMap<Integer, ArrayList<Integer>> currentMap = currentWordAttribute_WordOccurrences.getList();
+		WordAttribute_WordOccurrences currentWordAttribute_WordOccurrences = wordMapUncompressed
+		    .get(str);
+		LinkedHashMap<Integer, ArrayList<Integer>> currentMap = currentWordAttribute_WordOccurrences
+		    .getList();
 		return currentMap.containsKey(docid);
 	}
 
 	private String findWordWithSmallestList(Query query) throws IOException {
+		
 		query.processQuery();
+		System.out.println(query._tokens.size());
 		int minListLength = Integer.MAX_VALUE;
 		String smallestListWord = "";
+		System.out.println("Inside findWordWithSmallestList1");
 		for (String strTemp : query._tokens) {
-			boolean flag = false;
+			System.out.println("Inside findWordWithSmallestList");
+			boolean flag = false;			
 			if (!isPresentInCache(strTemp)) {
-				// System.out.println("not in cache");
+//				 System.out.println("not in cache");
 				flag = loadInCache(strTemp, query);
 				if (flag == false)
 					continue;
 			}
-			WordAttribute_WordOccurrences currentWordAttribute_WordOccurrences = wordMapUncompressed.get(strTemp);
+			WordAttribute_WordOccurrences currentWordAttribute_WordOccurrences = wordMapUncompressed
+			    .get(strTemp);
+			if(currentWordAttribute_WordOccurrences == null) { System.out.println("Print currWord is null");			
+			}
 			int mapSize = currentWordAttribute_WordOccurrences.getList().size();
-			// System.out.println(mapSize);
+//			System.out.println(mapSize);
 			if (minListLength > mapSize) {
 				minListLength = mapSize;
 				smallestListWord = strTemp;
-				// System.out.println("smallestListWord"+smallestListWord);
+				 System.out.println("smallestListWord"+smallestListWord);
 			}
 		}
+		System.out.println("Inside findWordWithSmallestList2");
 		return smallestListWord;
 	}
 
