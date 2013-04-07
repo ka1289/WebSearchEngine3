@@ -8,7 +8,7 @@ import java.util.HashMap;
  */
 public class DocumentIndexed extends Document {
 	private static final long serialVersionUID = 9184892508124423115L;
-	private long totalWords = 0;
+	private long _totalWords = 0;
 	private HashMap<String, Integer> wordFrequency = new HashMap<String, Integer>();
 
 	public HashMap<String, Integer> getWordFrequency() {
@@ -24,14 +24,15 @@ public class DocumentIndexed extends Document {
 	}
 
 	public long getTotalWords() {
-		return totalWords;
+		return _totalWords;
 	}
 
 	public void setTotalWords(long totalWords) {
-		this.totalWords = totalWords;
+		this._totalWords = totalWords;
 	}
 
 	public void incrementWordFrequency(String word) {
+		
 		if (wordFrequency.containsKey(word)) {
 			int i = wordFrequency.get(word);
 			i++;

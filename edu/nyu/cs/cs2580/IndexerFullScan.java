@@ -74,12 +74,14 @@ class IndexerFullScan extends Indexer implements Serializable {
 		} finally {
 			reader.close();
 		}
-		System.out.println("Indexed " + Integer.toString(_numDocs) + " docs with " + Long.toString(_totalTermFrequency)
+		System.out.println("Indexed " + Integer.toString(_numDocs)
+				+ " docs with " + Long.toString(_totalTermFrequency)
 				+ " terms.");
 
 		String indexFile = _options._indexPrefix + "/corpus.idx";
 		System.out.println("Store index to: " + indexFile);
-		ObjectOutputStream writer = new ObjectOutputStream(new FileOutputStream(indexFile));
+		ObjectOutputStream writer = new ObjectOutputStream(
+				new FileOutputStream(indexFile));
 		writer.writeObject(this);
 		writer.close();
 	}
@@ -91,6 +93,8 @@ class IndexerFullScan extends Indexer implements Serializable {
 	 * @param content
 	 */
 	private void processDocument(String content) {
+		
+		@SuppressWarnings("resource")
 		Scanner s = new Scanner(content).useDelimiter("\t");
 
 		String title = s.next();
@@ -117,6 +121,8 @@ class IndexerFullScan extends Indexer implements Serializable {
 		for (Integer idx : uniqueTerms) {
 			_termDocFrequency.put(idx, _termDocFrequency.get(idx) + 1);
 		}
+
+		s.close();
 	}
 
 	/**
@@ -142,6 +148,7 @@ class IndexerFullScan extends Indexer implements Serializable {
 			}
 			tokens.add(idx);
 		}
+		s.close();
 		return;
 	}
 
@@ -178,7 +185,8 @@ class IndexerFullScan extends Indexer implements Serializable {
 		String indexFile = _options._indexPrefix + "/corpus.idx";
 		System.out.println("Load index from: " + indexFile);
 
-		ObjectInputStream reader = new ObjectInputStream(new FileInputStream(indexFile));
+		ObjectInputStream reader = new ObjectInputStream(new FileInputStream(
+				indexFile));
 		IndexerFullScan loaded = (IndexerFullScan) reader.readObject();
 
 		this._documents = loaded._documents;
@@ -194,15 +202,16 @@ class IndexerFullScan extends Indexer implements Serializable {
 		this._termDocFrequency = loaded._termDocFrequency;
 		reader.close();
 
-		System.out.println(Integer.toString(_numDocs) + " documents loaded " + "with "
-				+ Long.toString(_totalTermFrequency) + " terms!");
+		System.out.println(Integer.toString(_numDocs) + " documents loaded "
+				+ "with " + Long.toString(_totalTermFrequency) + " terms!");
 	}
 
 	// /// Serving related functions.
 
 	@Override
 	public Document getDoc(int did) {
-		return (did >= _documents.size() || did < 0) ? null : _documents.get(did);
+		return (did >= _documents.size() || did < 0) ? null : _documents
+				.get(did);
 	}
 
 	@Override
@@ -213,12 +222,14 @@ class IndexerFullScan extends Indexer implements Serializable {
 
 	@Override
 	public int corpusDocFrequencyByTerm(String term) {
-		return _dictionary.containsKey(term) ? _termDocFrequency.get(_dictionary.get(term)) : 0;
+		return _dictionary.containsKey(term) ? _termDocFrequency
+				.get(_dictionary.get(term)) : 0;
 	}
 
 	@Override
 	public int corpusTermFrequency(String term) {
-		return _dictionary.containsKey(term) ? _termCorpusFrequency.get(_dictionary.get(term)) : 0;
+		return _dictionary.containsKey(term) ? _termCorpusFrequency
+				.get(_dictionary.get(term)) : 0;
 	}
 
 	@Override

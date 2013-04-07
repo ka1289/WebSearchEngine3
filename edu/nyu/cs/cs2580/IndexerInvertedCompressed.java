@@ -36,6 +36,7 @@ public class IndexerInvertedCompressed extends Indexer {
 	private Map<String, WordAttribute_WordOccurrences> wordMapUncompressed = new HashMap<String, WordAttribute_WordOccurrences>();
 	private Map<String, Integer> numViewsMap = new HashMap<String, Integer>();
 	private Map<Integer, Float> pageRank = new HashMap<Integer, Float>();
+	private int corpusSize;
 
 	public IndexerInvertedCompressed(Options options) {
 		super(options);
@@ -81,13 +82,14 @@ public class IndexerInvertedCompressed extends Indexer {
 		for (File eachFile : listOfFiles) {
 			int numViews = getNumViews(eachFile.getName());
 			float pageRank = getPageRank(index);
-			if (i >= noOfFiles / 10) {
+			if (i >= noOfFiles / 20) {
 				serialize();
+				serializeDocMap();
 				mapOfMaps = null;
 				i = 0;
 				initializeMap();
 			}
-			analyse(eachFile, index, numViews,pageRank);
+			analyse(eachFile, index, numViews, pageRank);
 			index++;
 			i++;
 		}
@@ -99,6 +101,31 @@ public class IndexerInvertedCompressed extends Indexer {
 		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private void serializeDocMap() throws IOException {
+		StringBuilder builder = new StringBuilder(_options._indexPrefix)
+				.append("/").append("doc_map.csv");
+		BufferedWriter aoos = new BufferedWriter(new FileWriter(
+				builder.toString(), true));
+		for (int doc : docMap.keySet()) {
+			aoos.write(doc + "\t");
+			DocumentIndexed docIndexed = docMap.get(doc);
+			aoos.write(docIndexed.getTitle() + "\t" + docIndexed.getUrl()
+					+ "\t");
+			aoos.write(docIndexed.getNumViews() + "\t"
+					+ docIndexed.getPageRank() + "\t");
+
+			HashMap<String, Integer> wordFreq = docIndexed.getWordFrequency();
+			for (String word : wordFreq.keySet()) {
+				aoos.write(word + "\t");
+				aoos.write(wordFreq.get(word) + "\t");
+			}
+			aoos.write(docIndexed.getTotalWords() + "");
+			aoos.newLine();
+		}
+		aoos.close();
+		docMap.clear();
 	}
 
 	private int getNumViews(String eachFile) throws IOException {
@@ -266,22 +293,6 @@ public class IndexerInvertedCompressed extends Indexer {
 	}
 
 	private void serialize() throws IOException {
-		StringBuilder builder = new StringBuilder(_options._indexPrefix)
-				.append("/").append("doc_map.csv");
-		BufferedWriter aoos = new BufferedWriter(new FileWriter(
-				builder.toString(), true));
-		for (int doc : docMap.keySet()) {
-			aoos.write(doc + "\t");
-			DocumentIndexed docIndexed = docMap.get(doc);
-			aoos.write(docIndexed.getTitle() + "\t" + docIndexed.getUrl()
-					+ "\t");
-			aoos.write(docIndexed.getNumViews() + "\t"
-					+ docIndexed.getPageRank() + "\t");
-			aoos.write(docIndexed.getTotalWords() + "");
-			aoos.newLine();
-		}
-		aoos.close();
-		docMap.clear();
 
 		for (int i = 0; i < 199; i++) {
 			StringBuilder file = new StringBuilder(_options._indexPrefix)
@@ -352,6 +363,7 @@ public class IndexerInvertedCompressed extends Indexer {
 				new StringReader(newFile)));
 		int i = 0;
 		for (String word : words) {
+			docIndexed.incrementWordFrequency(word);
 
 			String stemmed = Stemmer.stemAWord(word).trim();
 			if (stemmed.matches("[A-Za-z0-9]+")) {
@@ -415,6 +427,8 @@ public class IndexerInvertedCompressed extends Indexer {
 
 		File indexDir = new File(_options._indexPrefix);
 		File[] indexedFiles = indexDir.listFiles();
+		corpusSize = indexedFiles.length;
+
 		int noFilesLoaded = 0;
 		for (File file : indexedFiles) {
 			if (file.getName().equals(".DS_Store")) {
@@ -519,7 +533,13 @@ public class IndexerInvertedCompressed extends Indexer {
 		BufferedReader ois = new BufferedReader(new FileReader(
 				file.getAbsoluteFile()));
 		String o;
+		int numOfDocs = 0;
+
 		while (((o = ois.readLine()) != null)) {
+
+			if (numOfDocs < corpusSize / 20)
+				break;
+
 			String[] eachLine = o.split("\t");
 			int did = Integer.parseInt(eachLine[0]);
 
@@ -534,6 +554,22 @@ public class IndexerInvertedCompressed extends Indexer {
 			wa.setTotalWords(totalWords);
 			wa.setNumViews(numViews);
 			wa.setPageRank(pageRank);
+
+			HashMap<String, Integer> temp_map = new HashMap<String, Integer>();
+
+			int i = 0;
+			int index = 5;
+			while (i < eachLine.length - 2) {
+				String temp_word = eachLine[index];
+				index++;
+				int temp_freq = Integer.parseInt(eachLine[index]);
+				index++;
+				temp_map.put(temp_word, temp_freq);
+				i++;
+				i++;
+			}
+
+			wa.setWordFrequency(temp_map);
 			docMap.put(did, wa);
 		}
 		ois.close();
@@ -553,80 +589,72 @@ public class IndexerInvertedCompressed extends Indexer {
 			return docMap.get(docid);
 		return null;
 	}
-
+	
 	public DocumentIndexed nextDoc(Query query, int docid) {
-
 		QueryPhrase queryPhrase = new QueryPhrase(query._query);
 		queryPhrase.processQuery();
-		System.out.println("Inside nextDoc token size "
-				+ queryPhrase._tokens.size());
 		List<String> phrases = new ArrayList<String>();
 		StringBuilder tokens = new StringBuilder();
 		for (String strTemp : queryPhrase._tokens) {
 			// Checking of the string is a phrase or not
 			if (strTemp.split(" ").length > 1) {
 				String[] temp_split = strTemp.split(" ");
-				for (String z : temp_split) {
-					if (!isPresentInCache(z)) {
+				for(String z : temp_split) {
+					if(!isPresentInCache(z)) {
 						boolean flag = false;
 						try {
 							flag = loadInCache(z, queryPhrase);
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
-						if (flag == false)
+						if(flag == false)
 							return null;
 					}
 				}
 				phrases.add(strTemp.trim());
 			} else {
-				if (!isPresentInCache(strTemp.trim())) {
+				if(!isPresentInCache(strTemp.trim())) {
 					boolean flag = false;
 					try {
 						flag = loadInCache(strTemp.trim(), queryPhrase);
 					} catch (IOException e) {
 						e.printStackTrace();
 					}
-					if (flag == false)
+					if(flag == false)
 						return null;
 				}
 				tokens.append(strTemp.trim());
 				tokens.append(" ");
 			}
 		}
-
 		DocumentIndexed documentToBeCheckedForPhrases = null;
-		System.out.println("Inside nextDoc1");
 		try {
 			if (tokens.length() == 0) {
-				System.out.println("Inside tokens.length");
 				return functionCall(phrases, docid);
 			}
-			System.out.println("Inside nextDoc2");
-			documentToBeCheckedForPhrases = nextDocToken(
-					new Query(tokens.toString()), docid);
+			documentToBeCheckedForPhrases = nextDocToken(new Query(tokens.toString()), docid);
 			if (documentToBeCheckedForPhrases == null)
 				return null;
 			if (phrases.size() == 0) {
 				return documentToBeCheckedForPhrases;
 			} else {
 				while (documentToBeCheckedForPhrases != null) {
-					boolean value = checkIfPhrasesPresent(
-							documentToBeCheckedForPhrases._docid, phrases);
+					boolean value = checkIfPhrasesPresent(documentToBeCheckedForPhrases._docid, phrases);
 					if (!value) {
 						docid = documentToBeCheckedForPhrases._docid;
 						try {
-							documentToBeCheckedForPhrases = nextDocToken(
-									new Query(tokens.toString()), docid);
+							documentToBeCheckedForPhrases = nextDocToken(new Query(tokens.toString()), docid);
 						} catch (IOException e) {
 							e.printStackTrace();
 						}
-
+						
+						
 						continue;
 					} else {
 						return documentToBeCheckedForPhrases;
 					}
-
+					
+					
 				}
 			}
 			// First find out the smallest list among the list of all the words
@@ -646,9 +674,8 @@ public class IndexerInvertedCompressed extends Indexer {
 		}
 		return null;
 	}
-
-	private DocumentIndexed functionCall(List<String> phrases, int docid)
-			throws IOException {
+	
+	private DocumentIndexed functionCall(List<String> phrases, int docid) throws IOException {
 
 		StringBuilder query = new StringBuilder();
 		for (String s : phrases) {
@@ -656,19 +683,11 @@ public class IndexerInvertedCompressed extends Indexer {
 			for (String b : split)
 				query.append(b).append(" ");
 		}
-		System.out.println("Inside functionCall1");
-		String smallestWord = findWordWithSmallestList(new Query(query
-				.toString().trim()));
-		System.out.println(smallestWord);
-		WordAttribute_WordOccurrences smallestListOccr = wordMapUncompressed
-				.get(smallestWord);
-		System.out.println("After smallestList");
-		if (smallestListOccr == null) {
-			System.out.println("smallestList is null");
-		}
-		LinkedHashMap<Integer, ArrayList<Integer>> list = smallestListOccr
-				.getList();
-		System.out.println("Inside functionCall2");
+
+		String smallestWord = findWordWithSmallestList(new Query(query.toString().trim()));
+		WordAttribute_WordOccurrences smallestListOccr = wordMapUncompressed.get(smallestWord);
+		LinkedHashMap<Integer, ArrayList<Integer>> list = smallestListOccr.getList();
+
 		if (docid == -1) {
 			Iterator<Integer> iter = list.keySet().iterator();
 			docid = iter.next();
@@ -678,10 +697,8 @@ public class IndexerInvertedCompressed extends Indexer {
 			int currentDocId = currMap.getKey();
 			if (currentDocId <= docid)
 				continue;
-
-			boolean flag = isPresentInAll(currentDocId, smallestWord,
-					new Query(query.toString().trim()));
-			if (!flag)
+			boolean flag = isPresentInAll(currentDocId, smallestWord, new Query(query.toString().trim()));
+			if(!flag)
 				continue;
 			boolean value = checkIfPhrasesPresent(currentDocId, phrases);
 			if (value) {
@@ -692,7 +709,7 @@ public class IndexerInvertedCompressed extends Indexer {
 
 		return null;
 	}
-
+	
 	private boolean checkIfPhrasesPresent(int docid, List<String> phrases) {
 		for (String str : phrases) {
 			boolean value = isPhrasePresent(str, docid);
@@ -704,11 +721,11 @@ public class IndexerInvertedCompressed extends Indexer {
 		}
 		return true;
 	}
-
+	
 	private boolean isPhrasePresent(String str, int docid) {
 		String[] phrase = str.split(" ");
-
-		if (!isPresentInCache(phrase[0])) {
+		
+		if(!isPresentInCache(phrase[0])) {
 			boolean flag = false;
 			try {
 				flag = loadInCache(phrase[0]);
@@ -716,25 +733,22 @@ public class IndexerInvertedCompressed extends Indexer {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			if (flag == false)
+			if(flag == false)
 				return false;
 		}
-
-		WordAttribute_WordOccurrences currentWordAttribute_WordOccurrences = wordMapUncompressed
-				.get(phrase[0]);
-		LinkedHashMap<Integer, ArrayList<Integer>> map = currentWordAttribute_WordOccurrences
-				.getList();
-		if (!map.containsKey(docid))
+		
+		WordAttribute_WordOccurrences currentWordAttribute_WordOccurrences = wordMapUncompressed.get(phrase[0]);
+		LinkedHashMap<Integer, ArrayList<Integer>> map = currentWordAttribute_WordOccurrences.getList();
+		if(!map.containsKey(docid))
 			return false;
 		List<Integer> list = map.get(docid);
-
+		
 		boolean flag = false;
 		for (int position : list) {
 			flag = false;
 			int currentPositon = position + 1;
 			for (int j = 1; j < phrase.length; j++) {
-				boolean value = isPresentAtPosition(currentPositon, docid,
-						phrase[j]);
+				boolean value = isPresentAtPosition(currentPositon, docid, phrase[j]);
 				if (value) {
 					currentPositon++;
 					continue;
@@ -781,6 +795,20 @@ public class IndexerInvertedCompressed extends Indexer {
 			int numViews = Integer.parseInt(eachLine[3]);
 			int pageRank = Integer.parseInt(eachLine[4]);
 
+			HashMap<String, Integer> temp_map = new HashMap<String, Integer>();
+
+			int i = 0;
+			int index = 5;
+			while (i < eachLine.length - 2) {
+				String temp_word = eachLine[index];
+				index++;
+				int temp_freq = Integer.parseInt(eachLine[index]);
+				index++;
+				temp_map.put(temp_word, temp_freq);
+				i++;
+				i++;
+			}
+
 			int totalWords = Integer.parseInt(eachLine[eachLine.length - 1]);
 
 			wa.setTitle(title);
@@ -788,7 +816,7 @@ public class IndexerInvertedCompressed extends Indexer {
 			wa.setTotalWords(totalWords);
 			wa.setNumViews(numViews);
 			wa.setPageRank(pageRank);
-
+			wa.setWordFrequency(temp_map);
 			docMap.put(docid, wa);
 		}
 		ois.close();
@@ -966,7 +994,6 @@ public class IndexerInvertedCompressed extends Indexer {
 
 		// First find out the smallest list among the list of all the words
 		String smallestListWord = findWordWithSmallestList(query);
-		// System.out.println("smallestListword "+smallestListWord);
 		// Now take a next docId form the list of the smallestListWord
 		WordAttribute_WordOccurrences smallestWordAttribute_WordOccurrences = wordMapUncompressed
 				.get(smallestListWord);
@@ -983,7 +1010,6 @@ public class IndexerInvertedCompressed extends Indexer {
 
 		for (Map.Entry<Integer, ArrayList<Integer>> currentMap : smallestMap
 				.entrySet()) {
-			// System.out.println("checking for loop nextDocToken");
 			int currentDocId = currentMap.getKey();
 			if (currentDocId <= docid) {
 				continue;
@@ -992,7 +1018,6 @@ public class IndexerInvertedCompressed extends Indexer {
 					query);
 			if (value == true) {
 				if (!checkInCache(currentDocId)) {
-					// System.out.println("in cache check");
 					try {
 						loadDocInCache(currentDocId);
 					} catch (IOException e) {
@@ -1061,35 +1086,23 @@ public class IndexerInvertedCompressed extends Indexer {
 	}
 
 	private String findWordWithSmallestList(Query query) throws IOException {
-
 		query.processQuery();
-		System.out.println(query._tokens.size());
 		int minListLength = Integer.MAX_VALUE;
 		String smallestListWord = "";
-		System.out.println("Inside findWordWithSmallestList1");
 		for (String strTemp : query._tokens) {
-			System.out.println("Inside findWordWithSmallestList");
 			boolean flag = false;
 			if (!isPresentInCache(strTemp)) {
-				// System.out.println("not in cache");
 				flag = loadInCache(strTemp, query);
 				if (flag == false)
 					continue;
 			}
-			WordAttribute_WordOccurrences currentWordAttribute_WordOccurrences = wordMapUncompressed
-					.get(strTemp);
-			if (currentWordAttribute_WordOccurrences == null) {
-				System.out.println("Print currWord is null");
-			}
+			WordAttribute_WordOccurrences currentWordAttribute_WordOccurrences = wordMapUncompressed.get(strTemp);
 			int mapSize = currentWordAttribute_WordOccurrences.getList().size();
-			// System.out.println(mapSize);
 			if (minListLength > mapSize) {
 				minListLength = mapSize;
 				smallestListWord = strTemp;
-				System.out.println("smallestListWord" + smallestListWord);
 			}
 		}
-		System.out.println("Inside findWordWithSmallestList2");
 		return smallestListWord;
 	}
 
