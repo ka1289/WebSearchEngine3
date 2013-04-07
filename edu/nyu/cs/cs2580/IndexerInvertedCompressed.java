@@ -34,7 +34,8 @@ public class IndexerInvertedCompressed extends Indexer {
 	private Map<String, WordAttribute_WordOccurrences> wordMap = new HashMap<String, WordAttribute_WordOccurrences>();
 	private Map<Integer, DocumentIndexed> docMap = new HashMap<Integer, DocumentIndexed>();
 	private Map<String, WordAttribute_WordOccurrences> wordMapUncompressed = new HashMap<String, WordAttribute_WordOccurrences>();
-	private Map<String, Integer> numViewsMap;
+	private Map<String, Integer> numViewsMap = new HashMap<String, Integer>();
+	private Map<Integer, Float> pageRank = new HashMap<Integer, Float>();
 
 	public IndexerInvertedCompressed(Options options) {
 		super(options);
@@ -69,18 +70,24 @@ public class IndexerInvertedCompressed extends Indexer {
 				.getLogMinerByOption(SearchEngine.OPTIONS);
 		Check(miner != null, "Miner " + SearchEngine.OPTIONS._logMinerType
 				+ " not found!");
-
 		numViewsMap = (Map<String, Integer>) miner.load();
+
+		CorpusAnalyzer analyzer = CorpusAnalyzer.Factory
+				.getCorpusAnalyzerByOption(SearchEngine.OPTIONS);
+		Check(analyzer != null, "Analyzer "
+				+ SearchEngine.OPTIONS._corpusAnalyzerType + " not found!");
+		pageRank = (Map<Integer, Float>) analyzer.load();
+
 		for (File eachFile : listOfFiles) {
 			int numViews = getNumViews(eachFile.getName());
-
+			float pageRank = getPageRank(index);
 			if (i >= noOfFiles / 10) {
 				serialize();
 				mapOfMaps = null;
 				i = 0;
 				initializeMap();
 			}
-			analyse(eachFile, index, numViews);
+			analyse(eachFile, index, numViews,pageRank);
 			index++;
 			i++;
 		}
@@ -111,8 +118,33 @@ public class IndexerInvertedCompressed extends Indexer {
 			String o = ois.readLine();
 			if (o != null) {
 				String[] eachLine = o.split("\t");
-				int docid = Integer.parseInt(eachLine[1]);
-				return docid;
+				int num = Integer.parseInt(eachLine[1]);
+				return num;
+			}
+			ois.close();
+		}
+		return 0;
+	}
+
+	private float getPageRank(int index) throws IOException {
+		if (pageRank.containsKey(index))
+			return pageRank.get(index);
+		else {
+			List<String> commands = new ArrayList<String>();
+			commands.add("/bin/bash");
+			commands.add("-c");
+			commands.add("grep $'^" + index + "\t' " + _options._indexPrefix
+					+ "/" + "pageRanks.csv");
+			ProcessBuilder pb = new ProcessBuilder(commands);
+			Process p = pb.start();
+			BufferedReader ois = new BufferedReader(new InputStreamReader(
+					p.getInputStream()));
+
+			String o = ois.readLine();
+			if (o != null) {
+				String[] eachLine = o.split("\t");
+				float rank = Float.parseFloat(eachLine[1]);
+				return rank;
 			}
 			ois.close();
 		}
@@ -289,13 +321,14 @@ public class IndexerInvertedCompressed extends Indexer {
 		}
 	}
 
-	private void analyse(File eachFile, int index, int numViews)
+	private void analyse(File eachFile, int index, int numViews, float pageRank)
 			throws IOException {
 		_numDocs++;
 		DocumentIndexed docIndexed = new DocumentIndexed(index);
 		docIndexed.setTitle(eachFile.getName());
 		docIndexed.setUrl(eachFile.getPath());
 		docIndexed.setNumViews(numViews);
+		docIndexed.setPageRank(pageRank);
 
 		HashSet<String> stopWords = new HashSet<String>();
 		stopWords.add("the");
@@ -400,7 +433,10 @@ public class IndexerInvertedCompressed extends Indexer {
 
 			if (noFilesLoaded < 20 && !file.getName().equals("doc_map.csv")
 					&& !file.getName().equals(".DS_Store")
-					&& !file.getName().equals("numDocs.csv")) {
+					&& !file.getName().equals("numDocs.csv")
+					&& !file.getName().equals("numViews.csv")
+					&& !file.getName().equals("pageRank_graph.csv")
+					&& !file.getName().equals("pageRanks.csv")) {
 				loadFile(file);
 				noFilesLoaded++;
 			}
