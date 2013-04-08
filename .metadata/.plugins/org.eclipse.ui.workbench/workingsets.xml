@@ -1,4 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <workingSetManager>
+<<<<<<< HEAD
 <workingSet aggregate="true" factoryID="org.eclipse.ui.internal.WorkingSetFactory" id="1365274570354_0" label="Window Working Set" name="Aggregate for window 1365274570354"/>
+=======
+<workingSet aggregate="true" factoryID="org.eclipse.ui.internal.WorkingSetFactory" id="1365397354456_0" label="Window Working Set" name="Aggregate for window 1365397354455"/>
+>>>>>>> metadata commit
 </workingSetManager>

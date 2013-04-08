@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 INDEX VERSION 1.126+/Users/hiral/Documents/workspace/G05/hw3/g05/WebSearchEngine3/.metadata/.plugins/org.eclipse.jdt.core
 2199929143.index
 2545238116.index
@@ -24,3 +25,11 @@ INDEX VERSION 1.126+/Users/hiral/Documents/workspace/G05/hw3/g05/WebSearchEngine
 3302703152.index
 4238209716.index
 820667217.index
+=======
+INDEX VERSION 1.126+/Users/Honey/WebSearchEngine3/.metadata/.plugins/org.eclipse.jdt.core
+1206888066.index
+3624489663.index
+401382393.index
+3522649135.index
+2926646759.index
+>>>>>>> metadata commit
