@@ -1,0 +1,22 @@
+package edu.nyu.cs.cs2580;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class ComputeQuerySimilarity {
+/*first find the query named files
+you already have in each file the probability of u/Q so for each word where
+probability is greater than 1, add it then take the square root of this computed value
+This should be the coeff
+check value of u in Q multiply by u in Y
+keep adding for all u's(all words in the vocabulary of Q and Y
+and then finally square root of these
+*/
+	public void findQueryFiles(String query1,String query2){
+	List<String> commands = new ArrayList<String>();
+	commands.add("/bin/bash");
+	commands.add("-c");
+	commands.add("find /Users/Honey/WebSearchEngine3/queries -name "+
+	ProcessBuilder pb = new ProcessBuilder(commands);
+	Process p = pb.start();
+}
