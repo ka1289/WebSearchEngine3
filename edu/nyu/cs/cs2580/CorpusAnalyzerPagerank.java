@@ -6,10 +6,8 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 
 import edu.nyu.cs.cs2580.SearchEngine.Options;
 
@@ -53,22 +51,16 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 		File corpusDir = new File(_options._corpusPrefix);
 		File[] listOfFiles = corpusDir.listFiles();
 		noOfFiles = listOfFiles.length;
-
 		initializeDocumentMap();
 
-		int i = 0;
 		for (File eachFile : listOfFiles) {
-
-			if (i > noOfFiles / 10) {
-				i = 0;
-				serialize();
-			}
 
 			if (isValidDocument(eachFile)) {
 				ArrayList<Integer> adjList = new ArrayList<Integer>();
 				int index_file = docMap.get(eachFile.getName());
 
-				HeuristicLinkExtractor extractor = new HeuristicLinkExtractor(eachFile);
+				HeuristicLinkExtractor extractor = new HeuristicLinkExtractor(
+						eachFile);
 				String next = null;
 				while ((next = extractor.getNextInCorpusLinkTarget()) != null) {
 					if (docMap.containsKey(next)) {
@@ -78,28 +70,8 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 				}
 				graph.put(index_file, adjList);
 			}
-			i++;
 		}
-		docMap.clear();
 		return;
-	}
-
-	private void serialize() throws IOException {
-		StringBuilder builder = new StringBuilder(_options._indexPrefix).append("/").append("pageRank_graph.csv");
-
-		BufferedWriter aoos = new BufferedWriter(new FileWriter(builder.toString(), true));
-		for (int doc : graph.keySet()) {
-			aoos.write(doc + "\t");
-			ArrayList<Integer> list = graph.get(doc);
-			aoos.write(list.size() + "\t");
-
-			for (int i : list) {
-				aoos.write(i + "\t");
-			}
-			aoos.newLine();
-		}
-		aoos.close();
-		graph.clear();
 	}
 
 	private void initializeDocumentMap() {
@@ -148,30 +120,25 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 				R.put(entry, random_selection);
 			}
 
-			int nums = noOfFiles;
-			while (nums >= noOfFiles / 10) {
-				getGraphIntoBuffer(nums);
+			for (int docid : graph.keySet()) {
+				ArrayList<Integer> Q = graph.get(docid);
 
-				for (int docid : graph.keySet()) {
-					ArrayList<Integer> Q = graph.get(docid);
-
-					if (Q.size() > 0) {
-						for (int page : Q) {
-							float Rq = R.get(page);
-							float Ip = I.get(docid);
-							Rq = Rq + (((1 - lambda) * Ip) / Q.size());
-							R.put(page, Rq);
-						}
-					} else {
-						for (int page : I.keySet()) {
-							float Rq = R.get(page);
-							float Ip = I.get(docid);
-							float Rp = Rq + (((1 - lambda) * Ip) / I.size());
-							R.put(page, Rp);
-						}
+				if (Q.size() > 0) {
+					for (int page : Q) {
+						float Rq = R.get(page);
+						float Ip = I.get(docid);
+						Rq = Rq + (((1 - lambda) * Ip) / Q.size());
+						R.put(page, Rq);
 					}
-					I = R;
+				} else {
+					for (int page : I.keySet()) {
+						float Rq = R.get(page);
+						float Ip = I.get(docid);
+						float Rp = Rq + (((1 - lambda) * Ip) / I.size());
+						R.put(page, Rp);
+					}
 				}
+				I = R;
 			}
 			iterations++;
 		}
@@ -181,47 +148,18 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 	}
 
 	private void serializeR() throws IOException {
-		StringBuilder builder = new StringBuilder(_options._indexPrefix).append("/").append("pageRanks.csv");
-		BufferedWriter aoos = new BufferedWriter(new FileWriter(builder.toString(), true));
+		StringBuilder builder = new StringBuilder(_options._indexPrefix)
+				.append("/").append("pageRanks.csv");
+		BufferedWriter aoos = new BufferedWriter(new FileWriter(
+				builder.toString(), true));
 		for (int docid : R.keySet()) {
-			aoos.write(docid + "\t");
+			aoos.write(docid + " ");
 			float pageRankValue = R.get(docid);
 			aoos.write(pageRankValue + "");
 			aoos.newLine();
 		}
 		aoos.close();
 		R.clear();
-	}
-
-	private void getGraphIntoBuffer(int tail) throws IOException {
-		graph.clear();
-
-		StringBuilder builder = new StringBuilder(_options._indexPrefix).append("/").append("pageRank_graph.csv");
-		List<String> commands = new ArrayList<String>();
-		commands.add("/bin/bash");
-		commands.add("-c");
-		commands.add("cat " + builder.toString() + " | tail " + tail + " | head " + noOfFiles / 10);
-		ProcessBuilder pb = new ProcessBuilder(commands);
-		Process p = pb.start();
-
-		BufferedReader ois = new BufferedReader(new InputStreamReader(p.getInputStream()));
-
-		String o = null;
-		while ((o = ois.readLine()) != null) {
-			String[] split = o.split("\t");
-			int docid = Integer.parseInt(split[0]);
-
-			int freq = Integer.parseInt(split[1]);
-			int i = 0;
-			ArrayList<Integer> list = new ArrayList<Integer>();
-
-			while (i < freq) {
-				int temp = Integer.parseInt(split[i]);
-				list.add(temp);
-			}
-
-			graph.put(docid, list);
-		}
 	}
 
 	/**
@@ -232,12 +170,14 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 	 */
 	@Override
 	public Object load() throws IOException {
-		StringBuilder builder = new StringBuilder(_options._indexPrefix).append("/").append("pageRanks.csv");
-		BufferedReader ois = new BufferedReader(new FileReader(builder.toString()));
+		StringBuilder builder = new StringBuilder(_options._indexPrefix)
+				.append("/").append("pageRanks.csv");
+		BufferedReader ois = new BufferedReader(new FileReader(
+				builder.toString()));
 		String o;
 		int i = 0;
 		while (((o = ois.readLine()) != null) && i < 2000) {
-			String[] eachLine = o.split("\t");
+			String[] eachLine = o.split(" ");
 			int tmp = Integer.parseInt(eachLine[0]);
 			float temp = Float.parseFloat(eachLine[1]);
 			R.put(tmp, temp);

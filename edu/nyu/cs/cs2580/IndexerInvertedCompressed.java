@@ -144,7 +144,7 @@ public class IndexerInvertedCompressed extends Indexer {
 
 			String o = ois.readLine();
 			if (o != null) {
-				String[] eachLine = o.split("\t");
+				String[] eachLine = o.split(" ");
 				int num = Integer.parseInt(eachLine[1]);
 				return num;
 			}
@@ -169,7 +169,7 @@ public class IndexerInvertedCompressed extends Indexer {
 
 			String o = ois.readLine();
 			if (o != null) {
-				String[] eachLine = o.split("\t");
+				String[] eachLine = o.split(" ");
 				float rank = Float.parseFloat(eachLine[1]);
 				return rank;
 			}

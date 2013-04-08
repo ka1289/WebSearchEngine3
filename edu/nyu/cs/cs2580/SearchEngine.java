@@ -162,7 +162,6 @@ public class SearchEngine {
 		Check(analyzer != null, "Analyzer " + SearchEngine.OPTIONS._corpusAnalyzerType + " not found!");
 		analyzer.prepare();
 		analyzer.compute();
-
 		LogMiner miner = LogMiner.Factory.getLogMinerByOption(SearchEngine.OPTIONS);
 		Check(miner != null, "Miner " + SearchEngine.OPTIONS._logMinerType + " not found!");
 		miner.compute();
