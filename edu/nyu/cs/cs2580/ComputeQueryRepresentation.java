@@ -54,10 +54,10 @@ public class ComputeQueryRepresentation {
 				map.put(currWord, wordFreq);
 			}
 		}
-		calculateProbability(totalWordsInSet);
+		calculateProbability(totalWordsInSet,query);
 	}
 
-	private static void calculateProbability(long totalWordsInDoc) {
+	private static void calculateProbability(long totalWordsInDoc, Query query) {
 		System.out.println("Inside calculateProbability");
 		Map<String, Long> probabilityMap = new HashMap<String, Long>();
 		int totalProbability = 0;
@@ -67,13 +67,13 @@ public class ComputeQueryRepresentation {
 			probabilityMap.put(currWord.getKey(), probability);
 			totalProbability += probability;
 		}
-		writeToFile(probabilityMap, totalProbability);
+		writeToFile(probabilityMap, totalProbability, query);
 	}
 
 	private static void writeToFile(Map<String, Long> probabilityMap,
-			int totalProbability) {
+			int totalProbability, Query query) {
 		try {
-			File file = new File("query.txt");
+			File file = new File(query+".txt");
 
 			// if file doesnt exists, then create it
 			if (!file.exists()) {
@@ -90,4 +90,5 @@ public class ComputeQueryRepresentation {
 			e.printStackTrace();
 		}
 	}
+
 }

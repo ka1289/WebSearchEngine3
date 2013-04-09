@@ -47,6 +47,8 @@ public class Bhattacharyya {
 			for (File otherFile : listOfFiles){
 				String query2FileName=otherFile.getName();
 				query2 = query2FileName.split(".");
+				//BufferedReader query2File = new BufferedReader
+					//	(new FileReader(otherFile.getAbsoluteFile()));
 				//get the word from query1
 				while (((wordQuery1 = query1File.readLine()) != null)) {
 					String[] eachLine = wordQuery1.split("\t");
@@ -56,8 +58,7 @@ public class Bhattacharyya {
 					//not the same as query1
 					if(!otherFile.equals(eachFile)){
 			
-						BufferedReader query2File = new BufferedReader
-								(new FileReader(otherFile.getAbsoluteFile()));				
+								
 						List<String> commands = new ArrayList<String>();
 						commands.add("/bin/bash");
 						commands.add("-c");
