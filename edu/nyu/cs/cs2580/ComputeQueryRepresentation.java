@@ -17,15 +17,14 @@ public class ComputeQueryRepresentation {
 	static Map<String, Integer> map = new HashMap<String, Integer>();
 
 	public static void compute(Vector<ScoredDocument> scoredDocs, Query query,
-			Indexer indexer) {
+			Indexer indexer, int _numTerms) {
 		System.out.println("Insde compute");
 		System.out.println("ScoredDocs length " + scoredDocs.size());
 		int wordFreq = 0;
 		String currWord = "";
 		long totalWordsInSet = 0;
 		// Calculates for every document the frequency of every word in the
-		// query
-		// And keeps adding frequency of words to the map.
+		// query and keeps adding frequency of words to the map.
 		for (ScoredDocument doc : scoredDocs) {
 			String docInfo = doc.asTextResult();
 			System.out.println(docInfo);
@@ -34,13 +33,17 @@ public class ComputeQueryRepresentation {
 			// Total no of words in a particular document
 			DocumentIndexed documentIndexed = (DocumentIndexed) (indexer
 					.getDoc(Integer.parseInt(docid)));
+			System.out.println(documentIndexed.getWordFrequency());
+			System.out.println("before getting bodyTokens");
 			Map<String, Integer> tempWordFrequency = documentIndexed
 					.getWordFrequency();
+			
+			Map<String, Integer> mTerms = MapUtil.sortByValue(tempWordFrequency, _numTerms);
 			long totalWordsInDoc = documentIndexed.getTotalWords();
 			System.out.println("totalWords in doc " + totalWordsInDoc);
 			totalWordsInSet += totalWordsInDoc;
 
-			for (Map.Entry<String, Integer> entry : tempWordFrequency
+			for (Map.Entry<String, Integer> entry : mTerms
 					.entrySet()) {
 				wordFreq = entry.getValue();
 				currWord = entry.getKey();
@@ -51,10 +54,10 @@ public class ComputeQueryRepresentation {
 				map.put(currWord, wordFreq);
 			}
 		}
-		calculateProbability(totalWordsInSet, query);
+		calculateProbability(totalWordsInSet);
 	}
 
-	private static void calculateProbability(long totalWordsInDoc, Query query) {
+	private static void calculateProbability(long totalWordsInDoc) {
 		System.out.println("Inside calculateProbability");
 		Map<String, Long> probabilityMap = new HashMap<String, Long>();
 		int totalProbability = 0;
@@ -64,14 +67,13 @@ public class ComputeQueryRepresentation {
 			probabilityMap.put(currWord.getKey(), probability);
 			totalProbability += probability;
 		}
-		writeToFile(probabilityMap, totalProbability, query);
+		writeToFile(probabilityMap, totalProbability);
 	}
 
 	private static void writeToFile(Map<String, Long> probabilityMap,
-			int totalProbability, Query query) {
-		System.out.println("Inside writeToFile");
+			int totalProbability) {
 		try {
-			File file = new File(query + ".txt");
+			File file = new File("query.txt");
 
 			// if file doesnt exists, then create it
 			if (!file.exists()) {

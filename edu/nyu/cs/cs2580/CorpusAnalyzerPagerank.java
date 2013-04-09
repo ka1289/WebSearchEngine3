@@ -17,7 +17,6 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
 public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 
 	private HashMap<Integer, ArrayList<Integer>> graph = new HashMap<Integer, ArrayList<Integer>>();
-	private HashMap<String, Integer> docMap = new HashMap<String, Integer>();
 	private HashMap<Integer, Float> I = new HashMap<Integer, Float>();
 	int index;
 	int noOfFiles;
@@ -57,14 +56,14 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 
 			if (isValidDocument(eachFile)) {
 				ArrayList<Integer> adjList = new ArrayList<Integer>();
-				int index_file = docMap.get(eachFile.getName());
+				int index_file = _options._docMap.get(eachFile.getName());
 
 				HeuristicLinkExtractor extractor = new HeuristicLinkExtractor(
 						eachFile);
 				String next = null;
 				while ((next = extractor.getNextInCorpusLinkTarget()) != null) {
-					if (docMap.containsKey(next)) {
-						int temp = docMap.get(next);
+					if (_options._docMap.containsKey(next)) {
+						int temp = _options._docMap.get(next);
 						adjList.add(temp);
 					}
 				}
@@ -81,7 +80,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 		index = 1;
 		for (File eachFile : listOfFiles) {
 			String name = eachFile.getName();
-			docMap.put(name, index);
+			_options._docMap.put(name, index);
 			index++;
 		}
 	}

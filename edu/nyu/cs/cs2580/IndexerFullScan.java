@@ -94,7 +94,6 @@ class IndexerFullScan extends Indexer implements Serializable {
 	 */
 	private void processDocument(String content) {
 		
-		@SuppressWarnings("resource")
 		Scanner s = new Scanner(content).useDelimiter("\t");
 
 		String title = s.next();

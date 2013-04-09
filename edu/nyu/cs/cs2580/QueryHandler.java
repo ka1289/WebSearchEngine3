@@ -151,7 +151,7 @@ class QueryHandler implements HttpHandler {
 			respondWithMsg(exchange, "Something wrong with the URI!");
 		}
 		if (!uriPath.equals("/search") && !(uriPath.equals("/prf"))) {
-			respondWithMsg(exchange, "Only /search is handled!");
+			respondWithMsg(exchange, "Only /search and /prf are handled!");
 		}
 		System.out.println("Query: " + uriQuery);
 
@@ -170,34 +170,32 @@ class QueryHandler implements HttpHandler {
 		}
 
 		// Processing the query.
-		Query processedQuery = new Query(cgiArgs._query);
+		Query processedQuery = new QueryPhrase(cgiArgs._query);
 		processedQuery.processQuery();
 
 		// Ranking.
-		System.out.println("Ranking");
-		Vector<ScoredDocument> scoredDocs = ranker.runQuery(processedQuery,
-				cgiArgs._numResults);// Instead of _numResults
+		if (uriPath.equals("/search")) {
+			System.out.println("Ranking");
+			Vector<ScoredDocument> scoredDocs = ranker.runQuery(processedQuery,
+					cgiArgs._numResults);// Instead of _numResults
 
-		// Providing Feedback
-		System.out.println("Hello");
-		if (scoredDocs == null) {
-			System.out.println("Null");
+			StringBuffer response = new StringBuffer();
+			switch (cgiArgs._outputFormat) {
+			case TEXT:
+				constructTextOutput(scoredDocs, response);
+				break;
+			case HTML:
+				// @CS2580: Plug in your HTML output
+				break;
+			default:
+				// nothing
+			}
+			respondWithMsg(exchange, response.toString());
+			System.out.println("Finished query: " + cgiArgs._query);
+		} else if (uriPath.equals("/prf")) {
+			Vector<ScoredDocument> scoredDocs = ranker.runQuery(processedQuery, cgiArgs._numdocs);
+			ComputeQueryRepresentation.compute(scoredDocs, processedQuery, _indexer, cgiArgs._numterms);
 		}
-		ComputeQueryRepresentation
-				.compute(scoredDocs, processedQuery, _indexer);
 
-		StringBuffer response = new StringBuffer();
-		switch (cgiArgs._outputFormat) {
-		case TEXT:
-			constructTextOutput(scoredDocs, response);
-			break;
-		case HTML:
-			// @CS2580: Plug in your HTML output
-			break;
-		default:
-			// nothing
-		}
-		respondWithMsg(exchange, response.toString());
-		System.out.println("Finished query: " + cgiArgs._query);
 	}
 }

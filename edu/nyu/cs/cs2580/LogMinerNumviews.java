@@ -21,6 +21,7 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
  */
 public class LogMinerNumviews extends LogMiner {
 	private Map<String, Integer> numViews = new HashMap<String, Integer>();
+	
 	private HashSet<String> set;
 
 	public LogMinerNumviews(Options options) {
@@ -81,20 +82,20 @@ public class LogMinerNumviews extends LogMiner {
 			e.printStackTrace();
 		}
 
-		System.out.println("helo");
 		StringBuilder builder = new StringBuilder(_options._indexPrefix)
 				.append("/").append("numViews.csv");
 		BufferedWriter aoos = new BufferedWriter(new FileWriter(
 				builder.toString(), true));
 		for (String url : numViews.keySet()) {
+			int docid = _options._docMap.get(url);
 			aoos.write(url + " ");
 			long num = numViews.get(url);
-			aoos.write(num + "");
+			aoos.write(num + " ");
+			aoos.write(docid + "");
 			aoos.newLine();
 		}
 		aoos.close();
 		numViews.clear();
-		System.out.println("HEREERE");
 		return;
 	}
 
@@ -110,14 +111,16 @@ public class LogMinerNumviews extends LogMiner {
 				_options._indexPrefix + "/numViews.csv"));
 		String o;
 		int i = 0;
+		
+		Map<Integer, Integer> numViews_withDocid = new HashMap<Integer, Integer>();
 		while (((o = ois.readLine()) != null) && i < 2000) {
 			String[] eachLine = o.split(" ");
-			String tmp = eachLine[0];
+			int docid = Integer.parseInt(eachLine[2]);
 			int temp = Integer.parseInt(eachLine[1]);
-			numViews.put(tmp, temp);
+			numViews_withDocid.put(docid, temp);
 			i++;
 		}
 		ois.close();
-		return numViews;
+		return numViews_withDocid;
 	}
 }

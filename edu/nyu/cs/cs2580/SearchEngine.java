@@ -62,6 +62,8 @@ public class SearchEngine {
 
 		// The specific LogMiner to be used.
 		public String _logMinerType = null;
+		
+		public HashMap<String, Integer> _docMap = new HashMap<String, Integer>();
 
 		/**
 		 * Constructor for options.
