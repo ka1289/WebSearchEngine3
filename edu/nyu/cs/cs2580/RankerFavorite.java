@@ -28,6 +28,7 @@ public class RankerFavorite extends Ranker {
 		Vector<String> qv = new Vector<String>();
 		for (String s : query._tokens) {
 			if (s.split(" ").length > 1) {
+
 				String[] temp = s.split(" ");
 				for (String tempS : temp) {
 					qv.add(tempS);
@@ -41,7 +42,6 @@ public class RankerFavorite extends Ranker {
 				numResults);
 		Document doc = null;
 		int docid = -1;
-
 		while ((doc = _indexer.nextDoc(query, docid)) != null) {
 			retrieval_results.add(runquery_QL(qv, doc._docid));
 			if (retrieval_results.size() > numResults) {
@@ -83,7 +83,7 @@ public class RankerFavorite extends Ranker {
 
 				score += (Math.log(temp) / Math.log(2));
 			}
-			return new ScoredDocument(doc, Math.pow(2, score));
+			return new ScoredDocument(doc, Math.pow(2, score), doc.getPageRank(), doc.getNumViews());
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

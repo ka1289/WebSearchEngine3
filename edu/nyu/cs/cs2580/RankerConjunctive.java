@@ -27,7 +27,7 @@ public class RankerConjunctive extends Ranker {
     Document doc = null;
     int docid = -1;
     while ((doc = _indexer.nextDoc(query, docid)) != null) {
-      rankQueue.add(new ScoredDocument(doc, 1.0));
+      rankQueue.add(new ScoredDocument(doc, 1.0, 0f, 0));
       if (rankQueue.size() > numResults) {
         rankQueue.poll();
       }

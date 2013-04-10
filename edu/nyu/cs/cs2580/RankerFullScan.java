@@ -57,6 +57,6 @@ class RankerFullScan extends Ranker {
         break;
       }
     }
-    return new ScoredDocument(doc, score);
+    return new ScoredDocument(doc, score, 0f, 0);
   }
 }

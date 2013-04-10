@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Scanner;
 
@@ -21,8 +20,6 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
  */
 public class LogMinerNumviews extends LogMiner {
 	private Map<String, Integer> numViews = new HashMap<String, Integer>();
-	
-	private HashSet<String> set;
 
 	public LogMinerNumviews(Options options) {
 		super(options);
@@ -47,10 +44,12 @@ public class LogMinerNumviews extends LogMiner {
 			File corpusDir = new File(_options._corpusPrefix);
 			File[] listOfFiles = corpusDir.listFiles();
 			int noOfFiles = listOfFiles.length;
-
-			set = new HashSet<String>(noOfFiles);
+			
+			numViews = new HashMap<String, Integer>(noOfFiles);
+			
 			for (File eachFile : listOfFiles) {
-				set.add(eachFile.getName());
+				if (!eachFile.getName().startsWith("."))
+					numViews.put(eachFile.getName(), 0);
 			}
 
 			String path = _options._logPrefix;
@@ -65,14 +64,14 @@ public class LogMinerNumviews extends LogMiner {
 						String url = URLDecoder
 								.decode(split[1].trim(), "UTF-8");
 						int num = Integer.parseInt(split[2].trim());
-						if (set.contains(url))
+						if (numViews.containsKey(url))
 							numViews.put(url, num);
 					} catch (IllegalArgumentException e) {
-						// TODO
 					}
 				}
 			}
 			sc.close();
+			
 
 		} catch (FileNotFoundException e1) {
 			// TODO Auto-generated catch block
@@ -111,7 +110,7 @@ public class LogMinerNumviews extends LogMiner {
 				_options._indexPrefix + "/numViews.csv"));
 		String o;
 		int i = 0;
-		
+
 		Map<Integer, Integer> numViews_withDocid = new HashMap<Integer, Integer>();
 		while (((o = ois.readLine()) != null) && i < 2000) {
 			String[] eachLine = o.split(" ");

@@ -77,7 +77,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 		File corpusDir = new File(_options._corpusPrefix);
 		File[] listOfFiles = corpusDir.listFiles();
 
-		index = 1;
+		index = 0;
 		for (File eachFile : listOfFiles) {
 			String name = eachFile.getName();
 			_options._docMap.put(name, index);
@@ -100,7 +100,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 	 */
 	@Override
 	public void compute() throws IOException {
-		int i = 1;
+		int i = 0;
 		int noOfPages = index - 1;
 		while (i < index) {
 			float probability_P = (1 / noOfPages);
@@ -111,7 +111,7 @@ public class CorpusAnalyzerPagerank extends CorpusAnalyzer {
 		int iterations = 0;
 		float lambda = 0.90f;
 
-		while (iterations < 2) {
+		while (iterations < 1) {
 
 			float random_selection = lambda / noOfPages;
 

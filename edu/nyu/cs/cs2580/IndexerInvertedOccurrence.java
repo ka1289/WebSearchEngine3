@@ -37,6 +37,7 @@ public class IndexerInvertedOccurrence extends Indexer {
 		super(options);
 		System.out.println("Using Indexer: " + this.getClass().getSimpleName());
 	}
+	
 
 	private List<String> tokenize(TokenStream stream) throws IOException {
 		List<String> words = new ArrayList<String>();

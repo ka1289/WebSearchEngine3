@@ -58,53 +58,57 @@ public class IndexerInvertedCompressed extends Indexer {
 	@SuppressWarnings("unchecked")
 	@Override
 	public void constructIndex() throws IOException {
-		File corpusDir = new File(_options._corpusPrefix);
-		File[] listOfFiles = corpusDir.listFiles();
-		int noOfFiles = listOfFiles.length;
-
-		int i = 0;
-		int index = 1;
-		initializeMap();
-
-		LogMiner miner = LogMiner.Factory
-				.getLogMinerByOption(SearchEngine.OPTIONS);
-		Check(miner != null, "Miner " + SearchEngine.OPTIONS._logMinerType
-				+ " not found!");
-		numViewsMap = (Map<Integer, Integer>) miner.load();
-
-		CorpusAnalyzer analyzer = CorpusAnalyzer.Factory
-				.getCorpusAnalyzerByOption(SearchEngine.OPTIONS);
-		Check(analyzer != null, "Analyzer "
-				+ SearchEngine.OPTIONS._corpusAnalyzerType + " not found!");
-		pageRank = (Map<Integer, Float>) analyzer.load();
-
-		for (File eachFile : listOfFiles) {
-			int numViews = getNumViews(index, eachFile.getName());
-			float pageRank = getPageRank(index);
-			if (i >= noOfFiles / 20) {
-				serialize();
-				serializeDocMap(index, noOfFiles);
-				mapOfMaps = null;
-				i = 0;
-				initializeMap();
-			}
-			analyse(eachFile, index, numViews, pageRank);
-			index++;
-			i++;
-		}
-		serialize();
-		mapOfMaps = null;
-
 		try {
-			merge();
-		} catch (ClassNotFoundException e) {
+			File corpusDir = new File(_options._corpusPrefix);
+			File[] listOfFiles = corpusDir.listFiles();
+			int noOfFiles = listOfFiles.length;
+
+			int i = 0;
+			int index = 0;
+			initializeMap();
+
+			LogMiner miner = LogMiner.Factory
+					.getLogMinerByOption(SearchEngine.OPTIONS);
+			Check(miner != null, "Miner " + SearchEngine.OPTIONS._logMinerType
+					+ " not found!");
+			numViewsMap = (Map<Integer, Integer>) miner.load();
+
+			CorpusAnalyzer analyzer = CorpusAnalyzer.Factory
+					.getCorpusAnalyzerByOption(SearchEngine.OPTIONS);
+			Check(analyzer != null, "Analyzer "
+					+ SearchEngine.OPTIONS._corpusAnalyzerType + " not found!");
+			pageRank = (Map<Integer, Float>) analyzer.load();
+			int h = 0;
+			for (File eachFile : listOfFiles) {
+				int numViews = getNumViews(index, eachFile.getName());
+				float pageRank = getPageRank(index);
+				if (i >= noOfFiles / 20) {
+					serialize();
+					serializeDocMap(index, noOfFiles, h);
+					mapOfMaps = null;
+					i = 0;
+					initializeMap();
+					h++;
+				}
+				analyse(eachFile, index, numViews, pageRank);
+				index++;
+				i++;
+			}
+			serialize();
+			mapOfMaps = null;
+
+			try {
+				merge();
+			} catch (ClassNotFoundException e) {
+				e.printStackTrace();
+			}
+		} catch (Exception e) {
 			e.printStackTrace();
 		}
 	}
 
-	private void serializeDocMap(int index, int noOfFiles) throws IOException {
-		float value = (noOfFiles / 20);
-		int fileNum = (int) (index / value);
+	private void serializeDocMap(int index, int noOfFiles, int fileNum)
+			throws IOException {
 
 		StringBuilder builder = new StringBuilder(_options._indexPrefix)
 				.append("/").append("doc_map_").append(fileNum).append(".csv");
@@ -193,7 +197,10 @@ public class IndexerInvertedCompressed extends Indexer {
 		indexedFiles = indexDir.listFiles();
 		for (File file : indexedFiles) {
 			if (file.getName().equals(".DS_Store")
-					|| file.getName().equals("doc_map.csv"))
+					|| file.getName().matches("doc_map_[0-9][0-9]?.csv")
+					|| file.getName().equals("numViews.csv")
+					|| file.getName().equals("pageRanks.csv")
+					|| file.getName().equals("numDocs.csv"))
 				continue;
 			BufferedReader ois = new BufferedReader(new FileReader(
 					file.getAbsoluteFile()));
@@ -452,7 +459,7 @@ public class IndexerInvertedCompressed extends Indexer {
 			}
 
 			if (noFilesLoaded < 20
-					&& !file.getName().equals("doc_map_[0-9][0-9]?.csv")
+					&& !file.getName().matches("doc_map_[0-9][0-9]?.csv")
 					&& !file.getName().equals(".DS_Store")
 					&& !file.getName().equals("numDocs.csv")
 					&& !file.getName().equals("numViews.csv")
@@ -665,18 +672,6 @@ public class IndexerInvertedCompressed extends Indexer {
 
 				}
 			}
-			// First find out the smallest list among the list of all the words
-			// String smallestListWord = findWordWithSmallestList();
-			//
-			// Now take a next docId form the list of the smallestListWord
-			// WordAttribute_WordOccurrences
-			// smallestWordAttribute_WordOccurrences =
-			// wordMap.get(smallestListWord);
-			// LinkedHashMap<Integer, ArrayList<Integer>> smallestMap =
-			// smallestWordAttribute_WordOccurrences.getList();
-			//
-			// Find the position of docid in the smallestListWord
-			// ArrayList<Integer> positions = smallestMap.get(docid);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -715,7 +710,11 @@ public class IndexerInvertedCompressed extends Indexer {
 				continue;
 			boolean value = checkIfPhrasesPresent(currentDocId, phrases);
 			if (value) {
+				if (!checkInCache(currentDocId)) {
+					loadDocInCache(currentDocId);
+				}
 				DocumentIndexed docInd = docMap.get(currentDocId);
+
 				return docInd;
 			}
 		}
@@ -786,15 +785,15 @@ public class IndexerInvertedCompressed extends Indexer {
 				return;
 
 			float t = _numDocs / 20;
-			int maxEntries = (int) t * 2;
-			
+			int maxEntries = (int) t;
+
 			if (docMap.size() > maxEntries) {
 				Iterator<Integer> iter = docMap.keySet().iterator();
 				int temp = iter.next();
 				docMap.remove(temp);
 			}
 
-			int fileNum = (int) (did / t) + 1;
+			int fileNum = (int) (did / t);
 			StringBuilder builder = new StringBuilder(_options._indexPrefix)
 					.append("/").append("doc_map_").append(fileNum)
 					.append(".csv");
@@ -865,17 +864,6 @@ public class IndexerInvertedCompressed extends Indexer {
 		}
 		boolean flag = false;
 		int firstLetter = Math.abs(word.hashCode()) % 199;
-		// List<String> commands = new ArrayList<String>();
-		// commands.add("/bin/bash");
-		// commands.add("-c");
-
-		// commands.add("grep $'^" + word + "\t' " + _options._indexPrefix + "/"
-		// +
-		// firstLetter + ".csv");
-		// ProcessBuilder pb = new ProcessBuilder(commands);
-		// Process p = pb.start();
-		// BufferedReader ois = new BufferedReader(new
-		// InputStreamReader(p.getInputStream()));
 
 		Scanner scanner = new Scanner(new FileReader(_options._indexPrefix
 				+ "/" + firstLetter + ".csv"));
@@ -1189,14 +1177,14 @@ public class IndexerInvertedCompressed extends Indexer {
 				e.printStackTrace();
 			}
 		}
-		
-		if(wordMapUncompressed.get(term).getList().get(did) != null)
+
+		if (wordMapUncompressed.get(term).getList().get(did) != null)
 			return wordMapUncompressed.get(term).getList().get(did).size();
-		
+
 		else
 			return 0;
-//		int output = wordMapUncompressed.get(term).getList().get(did).size();
-//		return output;
+		// int output = wordMapUncompressed.get(term).getList().get(did).size();
+		// return output;
 	}
 
 }

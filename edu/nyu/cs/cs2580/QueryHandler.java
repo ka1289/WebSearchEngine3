@@ -2,6 +2,7 @@ package edu.nyu.cs.cs2580;
 
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.Map;
 import java.util.Vector;
 
 import com.sun.net.httpserver.Headers;
@@ -189,8 +190,14 @@ class QueryHandler implements HttpHandler {
 			System.out.println("Finished query: " + cgiArgs._query);
 		} else if (uriPath.equals("/prf")) {
 			Vector<ScoredDocument> scoredDocs = ranker.runQuery(processedQuery, cgiArgs._numdocs);
-			ComputeQueryRepresentation.compute(scoredDocs, processedQuery, _indexer, cgiArgs._numterms);
+			Map<String, Double> map = ComputeQueryRepresentation.compute(scoredDocs, processedQuery, _indexer, cgiArgs._numterms);
+			StringBuffer response = new StringBuffer();
+			
+			for(String s : map.keySet()) {
+				response.append(s + "\t" + map.get(s) + "\n");
+			}
+			respondWithMsg(exchange, response.toString());
+			System.out.println("Finished query: " + cgiArgs._query);
 		}
-
 	}
 }

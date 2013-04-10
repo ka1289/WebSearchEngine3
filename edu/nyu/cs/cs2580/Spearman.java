@@ -1,108 +1,113 @@
 package edu.nyu.cs.cs2580;
 
 import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
-
-import edu.nyu.cs.cs2580.SearchEngine.Options;
+import java.util.Map;
+import java.util.Set;
 
 public class Spearman {
-	private static String pathToPageRanks;
-	private static String pathToNumViews;
-	protected Options _options = null;
-	static String pathToOutput="/Users/Honey/data/index";
-	
-	static void parseCommandLine(String[] args) throws IOException, NumberFormatException {
-		System.out.println("here"+args[0]);
-		System.out.println("here"+args[1]);
-		pathToPageRanks=args[1];
-		pathToNumViews=args[0];
-		compute(pathToNumViews,pathToPageRanks);
-	}
-	
-	private static void compute(String pathToNumViews, String pathToPageRanks) throws IOException {
-	
-		String line;
-		double x=0,y=0;
-		int docId;
-		double difference, square=0,summand=0,numerator=0,coeff=0;
-		BufferedReader pageRankReader = new BufferedReader
-				(new FileReader(pathToPageRanks));
-		int noOfDocs = 0;
-	
-		//for each document entry in num views compute the difference	
-		while ((line=pageRankReader.readLine()) != null) {
-			noOfDocs++;
-			String[] eachLine= line.split(" ");
-			
-			docId=Integer.parseInt(eachLine[0]); //doc id
-			x=Double.valueOf(eachLine[1]).doubleValue();//Integer.parseInt(eachLine[1]); //pageRanks
-			
-			
-			List<String> commands = new ArrayList<String>();
-			commands.add("/bin/bash");
-			commands.add("-c");
-			//find same doc id in pageRank
-			commands.add("grep '[a-z]* [0-9]* "+docId+"' '"+pathToNumViews+"'");
-			
-			ProcessBuilder pb = new ProcessBuilder(commands);
-			Process p = pb.start();
-			BufferedReader numViewsReader = new BufferedReader
-					(new InputStreamReader(p.getInputStream()));
-			String numViewsLine = numViewsReader.readLine();
-			if ( numViewsLine!= null) {
-				String[] pageRank = numViewsLine.split(" ");
-				y=Double.valueOf(eachLine[1]).doubleValue();
-			}
-			difference=x-y;
-			y=0;
-			square=Math.pow(difference, 2);
-			summand=summand+square;		
-		}
-		pageRankReader.close();
-		numerator=6*summand;
-		System.out.println("no of Docs"+noOfDocs);
-		double denominator=noOfDocs*(Math.pow(noOfDocs,2) -1);
-		System.out.println("denominator"+denominator);
-		coeff=1-(numerator/denominator);	
-		System.out.println("coeff is"+coeff);
-		writeToFile(coeff,pathToOutput);
-	}
-	
-	private static void writeToFile(double coeff,String pathToOutput2) {
+
+	public static void main(String[] args) {
+
 		try {
-			StringBuilder file = new StringBuilder(pathToOutput2)
-			.append("/").append("readme.txt");
-			BufferedWriter bWriter = new BufferedWriter(new FileWriter(
-					file.toString(), true));
-			
-					bWriter.write("coeff = "+coeff);
-							
-					   
-			bWriter.close();			
-		} catch (IOException e) {	  
-			System.out.println("You have an exception");
+			List<PageRank> pageRankList = initializePageRanks(args[0]);
+			List<NumViews> numViewsList = initializeNumViews(args[1]);
+			double score = getScore(pageRankList, numViewsList);
+			System.out.println("Spearman Score: " + score);
+		} catch (NumberFormatException e) {
+			e.printStackTrace();
+		} catch (IOException e) {
 			e.printStackTrace();
 		}
-
 	}
-	public static void main(String[] args) {
-		
-		
-		try {
-			System.out.println("in this main");
-			parseCommandLine(args);
 
+	private static double getScore(List<PageRank> pageRankList,
+			List<NumViews> numViewsList) {
+		Collections.sort(pageRankList, new PageRankComparator());
+		Collections.sort(numViewsList, new NumViewsComparator());
+
+		Map<Integer, Integer> prRanks = new HashMap<Integer, Integer>();
+		Map<Integer, Integer> nvRanks = new HashMap<Integer, Integer>();
+
+		int i = 1;
+		for (PageRank d : pageRankList) {
+			prRanks.put(d.getDocid(), i);
+			i++;
 		}
-		catch (Exception e) {
-			System.err.println(e.getMessage());
+		pageRankList.clear();
+
+		i = 1;
+		for (NumViews d : numViewsList) {
+			nvRanks.put(d.getDocid(), i);
+			i++;
 		}
+
+		numViewsList.clear();
+		double sum = 0;
+		Set<Integer> set = prRanks.keySet();
+
+		for (int did : set) {
+			int xk = prRanks.get(did);
+			int yk;
+			if (nvRanks.containsKey(did))
+				yk = nvRanks.get(did);
+			else
+				yk = i++;
+
+			sum += ((xk - yk) * (xk - yk));
+		}
+
+		double num = 6 * sum;
+		double denom = set.size() * (Math.pow(set.size(), 2) - 1);
+		double output = (1 - (num / denom));
+
+		return output;
+	}
+
+	private static List<NumViews> initializeNumViews(String string)
+			throws NumberFormatException, IOException {
+		List<NumViews> numViewsList = new ArrayList<NumViews>();
+		BufferedReader ois = new BufferedReader(new FileReader(string));
+		String o;
+
+		while (((o = ois.readLine()) != null)) {
+			String[] eachLine = o.split(" ");
+			String docName = eachLine[0];
+			int docid = Integer.parseInt(eachLine[2]);
+			int temp = Integer.parseInt(eachLine[1]);
+
+			NumViews numViews = new NumViews(docid, docName, temp);
+			numViewsList.add(numViews);
+		}
+		ois.close();
+
+		return numViewsList;
+	}
+
+	private static List<PageRank> initializePageRanks(String string)
+			throws IOException {
+		List<PageRank> pageRankList = new ArrayList<PageRank>();
+
+		StringBuilder builder = new StringBuilder(string);
+		BufferedReader ois = new BufferedReader(new FileReader(
+				builder.toString()));
+		String o;
+
+		while (((o = ois.readLine()) != null)) {
+			String[] eachLine = o.split(" ");
+			int docid = Integer.parseInt(eachLine[0]);
+			double pr = Double.parseDouble(eachLine[1]);
+
+			PageRank tmp = new PageRank(docid, pr);
+			pageRankList.add(tmp);
+		}
+		ois.close();
+
+		return pageRankList;
 	}
 }
