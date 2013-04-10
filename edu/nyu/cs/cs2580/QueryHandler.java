@@ -82,9 +82,7 @@ class QueryHandler implements HttpHandler {
 					}
 				} else if (key.equals("numdocs")) {
 					try {
-						System.out.println("in numdocs");
 						_numdocs = Integer.parseInt(val);
-						System.out.println("Last statement in numdocs");
 					} catch (NumberFormatException e) {
 						// Ignored, search engine should never fail upon invalid
 						// user input.
@@ -138,7 +136,6 @@ class QueryHandler implements HttpHandler {
 
 		// Print the user request header.
 		Headers requestHeaders = exchange.getRequestHeaders();
-		System.out.print("Incoming request: ");
 		for (String key : requestHeaders.keySet()) {
 			System.out.print(key + ":" + requestHeaders.get(key) + "; ");
 		}
@@ -153,7 +150,6 @@ class QueryHandler implements HttpHandler {
 		if (!uriPath.equals("/search") && !(uriPath.equals("/prf"))) {
 			respondWithMsg(exchange, "Only /search and /prf are handled!");
 		}
-		System.out.println("Query: " + uriQuery);
 
 		// Process the CGI arguments.
 		CgiArguments cgiArgs = new CgiArguments(uriQuery);
@@ -175,7 +171,6 @@ class QueryHandler implements HttpHandler {
 
 		// Ranking.
 		if (uriPath.equals("/search")) {
-			System.out.println("Ranking");
 			Vector<ScoredDocument> scoredDocs = ranker.runQuery(processedQuery,
 					cgiArgs._numResults);// Instead of _numResults
 

@@ -16,41 +16,40 @@ import edu.nyu.cs.cs2580.SearchEngine.Options;
  */
 public class RankerFavorite extends Ranker {
 
-	public RankerFavorite(Options options, CgiArguments arguments, Indexer indexer) {
+	public RankerFavorite(Options options, CgiArguments arguments,
+			Indexer indexer) {
 		super(options, arguments, indexer);
 		System.out.println("Using Ranker: " + this.getClass().getSimpleName());
 	}
 
 	@Override
 	public Vector<ScoredDocument> runQuery(Query query, int numResults) {
-		
-		System.out.println("In run query " + query._tokens.size());		
+
 		Vector<String> qv = new Vector<String>();
-		for(String s : query._tokens) {
-			if(s.split(" ").length > 1) {
+		for (String s : query._tokens) {
+			if (s.split(" ").length > 1) {
 				String[] temp = s.split(" ");
-				for(String tempS : temp) {
+				for (String tempS : temp) {
 					qv.add(tempS);
-				}	
-			}else {
+				}
+			} else {
 				qv.add(s);
 			}
 		}
-		
-		Queue<ScoredDocument> retrieval_results = new PriorityQueue<ScoredDocument>(numResults);
+
+		Queue<ScoredDocument> retrieval_results = new PriorityQueue<ScoredDocument>(
+				numResults);
 		Document doc = null;
 		int docid = -1;
-		System.out.println("Hey " + query._query + " " + docid);
-		
+
 		while ((doc = _indexer.nextDoc(query, docid)) != null) {
-			System.out.println("once? " + doc._docid);
 			retrieval_results.add(runquery_QL(qv, doc._docid));
 			if (retrieval_results.size() > numResults) {
-				retrieval_results.poll();	
+				retrieval_results.poll();
 			}
 			docid = doc._docid;
 		}
-		System.out.println("Hey2");
+
 		Vector<ScoredDocument> results = new Vector<ScoredDocument>();
 		ScoredDocument scoredDoc = null;
 		while ((scoredDoc = retrieval_results.poll()) != null) {
@@ -61,29 +60,34 @@ public class RankerFavorite extends Ranker {
 	}
 
 	private ScoredDocument runquery_QL(Vector<String> query, int did) {
-		System.out.println("Inside runQuery");
-		DocumentIndexed doc = (DocumentIndexed) _indexer.getDoc(did);
-		double score = 0;
-		double lambda = 0.5;
-		for (String q : query) {
-			System.out.println(" query tokens " + q);
-			int docTermFreq = _indexer.documentTermFrequency(q, Integer.toString(doc._docid));
-			long totalWords_doc = doc.getTotalWords();
-			int corpusTermFreq = _indexer.corpusTermFrequency(q);
-			System.out.println(corpusTermFreq);
-			long totalWords_corpus = _indexer.totalTermFrequency();
-			double temp = 0.0;
+		try {
+			DocumentIndexed doc = (DocumentIndexed) _indexer.getDoc(did);
+			double score = 0;
+			double lambda = 0.5;
+			for (String q : query) {
+				int docTermFreq = _indexer.documentTermFrequency(q,
+						Integer.toString(doc._docid));
+				long totalWords_doc = doc.getTotalWords();
+				int corpusTermFreq = _indexer.corpusTermFrequency(q);
+				long totalWords_corpus = _indexer.totalTermFrequency();
+				double temp = 0.0;
 
-			if (totalWords_doc != 0) {
-				temp += (1 - lambda) * ((1.0 * docTermFreq) / (1.0 * totalWords_doc));
-			}
-			if (totalWords_corpus != 0) {
-				temp += (lambda) * ((1.0 * corpusTermFreq) / (1.0 * totalWords_corpus));
-			}
+				if (totalWords_doc != 0) {
+					temp += (1 - lambda)
+							* ((1.0 * docTermFreq) / (1.0 * totalWords_doc));
+				}
+				if (totalWords_corpus != 0) {
+					temp += (lambda)
+							* ((1.0 * corpusTermFreq) / (1.0 * totalWords_corpus));
+				}
 
-			score += (Math.log(temp) / Math.log(2));
+				score += (Math.log(temp) / Math.log(2));
+			}
+			return new ScoredDocument(doc, Math.pow(2, score));
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
-		return new ScoredDocument(doc, Math.pow(2, score));
+		return null;
 	}
 
 }

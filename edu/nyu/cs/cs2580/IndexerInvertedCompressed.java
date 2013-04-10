@@ -39,8 +39,7 @@ public class IndexerInvertedCompressed extends Indexer {
 
 	public IndexerInvertedCompressed(Options options) {
 		super(options);
-		// system.out.println("Using Indexer: " +
-		// this.getClass().getSimpleName());
+		System.out.println("Using Indexer: " + this.getClass().getSimpleName());
 	}
 
 	private List<String> tokenize(TokenStream stream) throws IOException {
@@ -788,13 +787,14 @@ public class IndexerInvertedCompressed extends Indexer {
 
 			float t = _numDocs / 20;
 			int maxEntries = (int) t * 2;
+			
 			if (docMap.size() > maxEntries) {
 				Iterator<Integer> iter = docMap.keySet().iterator();
 				int temp = iter.next();
 				docMap.remove(temp);
 			}
 
-			int fileNum = (int) (did / t);
+			int fileNum = (int) (did / t) + 1;
 			StringBuilder builder = new StringBuilder(_options._indexPrefix)
 					.append("/").append("doc_map_").append(fileNum)
 					.append(".csv");
@@ -1152,18 +1152,15 @@ public class IndexerInvertedCompressed extends Indexer {
 	}
 
 	private boolean isPresentInCache(String term) {
-		System.out.println(">>>>" + term);
 		return wordMapUncompressed.containsKey(term);
 	}
 
 	@Override
 	public int corpusTermFrequency(String term) {
-		System.out.println("Atleast here? ");
 		boolean flag = false;
 		if (!isPresentInCache(term)) {
 			try {
 				flag = loadInCache(term);
-				System.out.println("flag " + flag);
 				if (flag == false) {
 					return 0;
 				}
@@ -1172,8 +1169,6 @@ public class IndexerInvertedCompressed extends Indexer {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("yeah");
-		System.out.println(wordMapUncompressed.get(term) + " --- ");
 		return wordMapUncompressed.get(term).getFreq();
 	}
 
@@ -1194,9 +1189,14 @@ public class IndexerInvertedCompressed extends Indexer {
 				e.printStackTrace();
 			}
 		}
-
-		int output = wordMapUncompressed.get(term).getList().get(did).size();
-		return output;
+		
+		if(wordMapUncompressed.get(term).getList().get(did) != null)
+			return wordMapUncompressed.get(term).getList().get(did).size();
+		
+		else
+			return 0;
+//		int output = wordMapUncompressed.get(term).getList().get(did).size();
+//		return output;
 	}
 
 }

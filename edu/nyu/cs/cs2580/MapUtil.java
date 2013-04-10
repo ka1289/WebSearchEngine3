@@ -6,11 +6,9 @@ import java.util.Map.Entry;
 public class MapUtil {
 	
 	static Map<String, Integer> sortByValue(Map<String, Integer> map, int numTermsM) {
-		System.out.println(numTermsM + " numterms");
 		ValueComparator bvc = new ValueComparator(map);
 		TreeMap<String, Integer> tmp = new TreeMap<String, Integer>(bvc);
 		TreeMap<String, Integer> sortedMap = new TreeMap<String, Integer>(bvc);
-		System.out.println(map.size() + " in util");
 		tmp.putAll(map);
 		int count = 0;
 		try {
