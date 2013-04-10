@@ -11,13 +11,17 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 
+import edu.nyu.cs.cs2580.SearchEngine.Options;
+
 public class Spearman {
 	private static String pathToPageRanks;
 	private static String pathToNumViews;
+	protected Options _options = null;
 	static String pathToOutput="/Users/Honey/data/index";
 	
 	static void parseCommandLine(String[] args) throws IOException, NumberFormatException {
 		System.out.println("here"+args[0]);
+		System.out.println("here"+args[1]);
 		pathToPageRanks=args[1];
 		pathToNumViews=args[0];
 		compute(pathToNumViews,pathToPageRanks);
@@ -29,37 +33,40 @@ public class Spearman {
 		double x=0,y=0;
 		int docId;
 		double difference, square=0,summand=0,numerator=0,coeff=0;
-		BufferedReader numViewsReader = new BufferedReader
-				(new FileReader(pathToNumViews));
+		BufferedReader pageRankReader = new BufferedReader
+				(new FileReader(pathToPageRanks));
 		int noOfDocs = 0;
 	
 		//for each document entry in num views compute the difference	
-		while ((line=numViewsReader.readLine()) != null) {
+		while ((line=pageRankReader.readLine()) != null) {
 			noOfDocs++;
 			String[] eachLine= line.split(" ");
-			docId=Integer.parseInt(eachLine[2]); //doc id
-			y=Integer.parseInt(eachLine[1]); //numviews
+			
+			docId=Integer.parseInt(eachLine[0]); //doc id
+			x=Double.valueOf(eachLine[1]).doubleValue();//Integer.parseInt(eachLine[1]); //pageRanks
+			
 			
 			List<String> commands = new ArrayList<String>();
 			commands.add("/bin/bash");
 			commands.add("-c");
 			//find same doc id in pageRank
-			commands.add("grep '"+docId+"' '"+pathToPageRanks+"'");
-			System.out.println("docId"+docId);
+			commands.add("grep '[a-z]* [0-9]* "+docId+"' '"+pathToNumViews+"'");
+			
 			ProcessBuilder pb = new ProcessBuilder(commands);
 			Process p = pb.start();
-			BufferedReader pageRankReader = new BufferedReader
+			BufferedReader numViewsReader = new BufferedReader
 					(new InputStreamReader(p.getInputStream()));
-			String pageRankLine = pageRankReader.readLine();
-			if ( pageRankLine!= null) {
-				String[] pageRank = pageRankLine.split(" ");
-				x=Integer.parseInt(eachLine[2]);
+			String numViewsLine = numViewsReader.readLine();
+			if ( numViewsLine!= null) {
+				String[] pageRank = numViewsLine.split(" ");
+				y=Double.valueOf(eachLine[1]).doubleValue();
 			}
 			difference=x-y;
+			y=0;
 			square=Math.pow(difference, 2);
 			summand=summand+square;		
 		}
-		numViewsReader.close();
+		pageRankReader.close();
 		numerator=6*summand;
 		System.out.println("no of Docs"+noOfDocs);
 		double denominator=noOfDocs*(Math.pow(noOfDocs,2) -1);
